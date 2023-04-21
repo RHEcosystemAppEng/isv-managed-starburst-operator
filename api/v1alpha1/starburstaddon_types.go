@@ -23,42 +23,42 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// ISVAddonSpec defines the desired state of ISVAddon
-type ISVAddonSpec struct {
+// StarburstAddonSpec defines the desired state of StarburstAddon
+type StarburstAddonSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	//+operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	// Foo is an example field of StarburstAddon. Edit starburstaddon_types.go to remove/update
+	Foo string `json:"foo,omitempty"`
 }
 
-// ISVAddonStatus defines the observed state of ISVAddon
-type ISVAddonStatus struct {
+// StarburstAddonStatus defines the observed state of StarburstAddon
+type StarburstAddonStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
-//+kubebuilder:printcolumn:name="Foo",type=string,JSONPath=".spec.foo",description="bla bla bla bla"
 
-// ISVAddon is the Schema for the isvaddons API
-type ISVAddon struct {
+// StarburstAddon is the Schema for the starburstaddons API
+type StarburstAddon struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   ISVAddonSpec   `json:"spec,omitempty"`
-	Status ISVAddonStatus `json:"status,omitempty"`
+	Spec   StarburstAddonSpec   `json:"spec,omitempty"`
+	Status StarburstAddonStatus `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 
-// ISVAddonList contains a list of ISVAddon
-type ISVAddonList struct {
+// StarburstAddonList contains a list of StarburstAddon
+type StarburstAddonList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []ISVAddon `json:"items"`
+	Items           []StarburstAddon `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&ISVAddon{}, &ISVAddonList{})
+	SchemeBuilder.Register(&StarburstAddon{}, &StarburstAddonList{})
 }
