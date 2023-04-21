@@ -1,0 +1,51 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: '[]'
+    capabilities: Basic Install
+  name: isv-addon.v0.0.0
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - description: ISVAddon is the Schema for the isvaddons API
+      displayName: ISVAddon
+      kind: ISVAddon
+      name: isvaddons.example.com.example.com
+      version: v1alpha1
+  description: A template operator for Red Hat Isv's
+  displayName: Isv Addon Operator
+  icon:
+  - base64data: ""
+    mediatype: ""
+  install:
+    spec:
+      deployments: null
+    strategy: ""
+  installModes:
+  - supported: false
+    type: OwnNamespace
+  - supported: false
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: true
+    type: AllNamespaces
+  keywords:
+  - Isv
+  - Operator
+  - Template
+  links:
+  - name: Isv Addon
+    url: https://isv-addon.domain
+  maintainers:
+  - email: tmihalac@redhat.com
+    name: Theodor Mihalache
+  - email: tsisodia@redhat.com
+    name: Twinkll Sisodia
+  maturity: alpha
+  provider:
+    name: Red Hat
+  version: 0.0.0

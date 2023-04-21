@@ -1,0 +1,61 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: manager-role
+rules:
+- apiGroups:
+  - example.com.example.com
+  resources:
+  - isvaddons
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - example.com.example.com
+  resources:
+  - isvaddons/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - example.com.example.com
+  resources:
+  - isvaddons/status
+  verbs:
+  - get
+  - patch
+  - update
+# TODO do we need secrets at the cluster level??
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - create
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - alertmanagers
+  - alertmanagers/finalizers
+  - alertmanagerconfigs
+  - prometheuses
+  - prometheuses/finalizers
+  - thanosrulers
+  - thanosrulers/finalizers
+  - servicemonitors
+  - podmonitors
+  - probes
+  - prometheusrules
+  verbs:
+  - '*'

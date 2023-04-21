@@ -1,0 +1,141 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: validate-enterprise-webhook-service
+  namespace: system
+spec:
+  ports:
+  - port: 9443
+    targetPort: 9443
+  selector:
+    control-plane: validation-webhook-manager
+
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: validate-enterprise-webhook-configuration
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    caBundle: Cg==
+    service:
+      name: validate-enterprise-webhook-service
+      namespace: system
+      path: /validate-enterprise
+      port: 0
+  failurePolicy: Fail
+  name: validate-enterprise-webhook.example.com.example.com
+  rules:
+  - apiGroups:
+    - replace-me-with-enterprise-group
+    apiVersions:
+    - replace-me-with-enterprise-version
+    operations:
+    - CREATE
+    - UPDATE
+    - DELETE
+    resources:
+    - replace-me-with-enterprise-plural
+    scope: '*'
+  sideEffects: None
+  timeoutSeconds: 10
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: validate-enterprise-webhook
+  namespace: system
+  labels:
+    app.kubernetes.io/component: validation-webhook
+    app.kubernetes.io/created-by: isv-addon
+    app.kubernetes.io/instance: validation-webhook-manager
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: deployment
+    app.kubernetes.io/part-of: isv-addon
+    control-plane: validation-webhook-manager
+spec:
+  selector:
+    matchLabels:
+      control-plane: validation-webhook-manager
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: manager
+      labels:
+        control-plane: validation-webhook-manager
+    spec:
+      # TODO(user): Uncomment the following code to configure the nodeAffinity expression
+      # according to the platforms which are supported by your solution.
+      # It is considered best practice to support multiple architectures. You can
+      # build your manager image using the makefile target docker-buildx.
+      # affinity:
+      #   nodeAffinity:
+      #     requiredDuringSchedulingIgnoredDuringExecution:
+      #       nodeSelectorTerms:
+      #         - matchExpressions:
+      #           - key: kubernetes.io/arch
+      #             operator: In
+      #             values:
+      #               - amd64
+      #               - arm64
+      #               - ppc64le
+      #               - s390x
+      #           - key: kubernetes.io/os
+      #             operator: In
+      #             values:
+      #               - linux
+      securityContext:
+        runAsNonRoot: true
+        # TODO(user): For common cases that do not require escalating privileges
+        # it is recommended to ensure that all your Pods/Containers are restrictive.
+        # More info: https://kubernetes.io/docs/concepts/security/pod-security-standards/#restricted
+        # Please uncomment the following code if your project does NOT have to work on old Kubernetes
+        # versions < 1.19 or on vendors versions which do NOT support this field by default (i.e. Openshift < 4.11 ).
+        # seccompProfile:
+        #   type: RuntimeDefault
+      containers:
+      - command:
+        - /webhook
+        - --tls-cert=/tmp/k8s-webhook-server/serving-certs/tls.crt
+        - --tls-key=/tmp/k8s-webhook-server/serving-certs/tls.key
+        - --port=0
+        - --health-probe-bind-address=:8081
+        - --metrics-bind-address=127.0.0.1:8080
+        - --leader-elect
+        image: operator:latest
+        ports:
+        - containerPort: 0
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8081
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        name: manager
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - "ALL"
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8081
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        # TODO(user): Configure the resources accordingly based on the project requirements.
+        # More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+        resources:
+          limits:
+            cpu: 500m
+            memory: 128Mi
+          requests:
+            cpu: 10m
+            memory: 64Mi
+      serviceAccountName: controller-manager
+      terminationGracePeriodSeconds: 10

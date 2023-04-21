@@ -1,0 +1,31 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: enterprise-role
+rules:
+- apiGroups:
+  - replace-me-with-enterprise-group
+  resources:
+  - replace-me-with-enterprise-plural
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - replace-me-with-enterprise-group
+  resources:
+  - replace-me-with-enterprise-plural/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - replace-me-with-enterprise-group
+  resources:
+  - replace-me-with-enterprise-plural/status
+  verbs:
+  - get
+  - patch
+  - update
