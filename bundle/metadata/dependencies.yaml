@@ -1,7 +1,7 @@
 dependencies:
 - type: olm.package
   value:
-    packageName: starburst-enterprise-helm-operator
+    packageName: starburst-enterprise-helm-operator-rhmp
     version: "380.3.2"
 - type: olm.package
   value:

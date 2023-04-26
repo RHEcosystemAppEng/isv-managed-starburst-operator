@@ -10,7 +10,7 @@ metadata:
     app.kubernetes.io/name: service
     app.kubernetes.io/part-of: starburst-addon-operator
     control-plane: validation-webhook-manager
-  name: starburst-addon-operator-validate-enterprise-webhook-metrics-service
+  name: starburst-addon-validate-enterprise-webhook-metrics-service
 spec:
   ports:
   - name: https
