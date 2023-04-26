@@ -1,5 +1,0 @@
-# This kustomization.yaml is not intended to be run by itself,
-# It should be run by config/default
-resources:
-- bases/example.com.example.com_isvaddons.yaml
-#+kubebuilder:scaffold:crdkustomizeresource

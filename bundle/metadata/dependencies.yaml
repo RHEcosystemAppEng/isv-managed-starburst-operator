@@ -1,0 +1,9 @@
+dependencies:
+- type: olm.package
+  value:
+    packageName: starburst-enterprise-helm-operator
+    version: "380.3.2"
+- type: olm.package
+  value:
+    packageName: ose-prometheus-operator
+    version: "4.10.0"

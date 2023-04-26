@@ -1,0 +1,10 @@
+apiVersion: v1
+data:
+  GROUP: charts.starburstdata.com
+  KIND: StarburstEnterprise
+  PLURAL: starburstenterprises
+  VERSION: v1alpha1
+immutable: true
+kind: ConfigMap
+metadata:
+  name: starburst-addon-operator-enterprise-info
