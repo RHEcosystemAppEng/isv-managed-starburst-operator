@@ -1,0 +1,37 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- ../crd
+- ../rbac
+- ../addon
+- ../webhook
+# [PROMETHEUS] To enable prometheus monitor, uncomment all sections with 'PROMETHEUS'.
+#- ../prometheus
+
+namespace: starburst-addon-operator-system
+namePrefix: starburst-addon-operator-
+
+#commonLabels:
+#  someName: someValue
+
+images:
+- name: operator
+  newName: quay.io/tmihalac/starburst-addon-operator
+  newTag: v0.0.1
+
+# Protect the /metrics endpoint by putting it behind auth.
+patchesStrategicMerge:
+- patches/manager_auth_proxy.yaml
+- patches/webhook_auth_proxy.yaml
+
+configMapGenerator:
+- envs:
+  - ../../enterprise-crd.env
+  name: enterprise-info
+  options:
+    disableNameSuffixHash: true
+    immutable: true
+
+replacements:
+- path: kustomizereplace.yaml

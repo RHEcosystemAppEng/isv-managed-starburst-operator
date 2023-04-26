@@ -1,0 +1,63 @@
+- alert: high_starburst_query_mem
+  expr: starburst_query_mem >= 45158388108
+  for: 5m
+  annotations:
+    summary: High Query Memory
+    severity: page
+    description: High average memory used by all queries over a given time period
+- Alert: high_starburst_heap_mem
+  Expr: starburst_heap_mem >= 45631505600
+  For: 5m
+  Annotations:
+    summary: High Max Heap Memory
+    severity: warn
+    description: The max amount of heap memory configured in the JVM aggregated across the entire cluster
+- Alert: high_starburst_max_query_mem
+  Expr: starburst_max_query_mem >= 94489280512
+  For: 5m
+  Annotations:
+    summary: High Heap Memory
+    severity: warn
+    description: High amount of heap memory used by the JVMs across all cluster nodes
+- Alert: trino_node_failure
+  Expr: trino_active_nodes <= 1
+  For: 5m
+  Annotations:
+    summary: Trino node failure
+    severity: page
+    description: An active trino node went down
+- Alert: high_starburst_max_heap_mem
+  Expr: starburst_max_heap_mem >= 94489280512
+  For: 5m
+  Annotations:
+    summary: High Max Heap Memory Alert
+    severity: acknowledged
+    description: The max amount of heap memory configured in the JVM aggregated across the entire cluster
+- Alert: starburst_instance_down
+  Expr: count(up{endpoint="metrics"}) != 3
+  For: 5m
+  Annotations:
+    summary: Starburst instance down
+    severity: page
+    description: The pods churned
+- Alert: high_thread_count
+  Expr: sum(thread_count) > 400
+  For: 5m
+  Annotations:
+    summary: High Thread Count
+    severity: page
+    description: High Thread Count
+- Alert: JvmMemoryFillingUp
+  Expr: (sum by (instance)(jvm_memory_bytes_used{area="heap"}) / sum by (instance)(jvm_memory_bytes_max{area="heap"})) * 100 > 80
+  For: 2m
+  Annotations:
+    summary: "JVM memory filling up (instance {{ $labels.instance }})"
+    severity: page
+    description: "JVM memory is filling up (> 80%)\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+- Alert: starburst_failed_queries
+  Expr: failed_queries >= 4
+  For: 5m
+  Annotations:
+    summary: Queries are failing
+    severity: page
+    description: In the last 5 mins the failed queries have risen

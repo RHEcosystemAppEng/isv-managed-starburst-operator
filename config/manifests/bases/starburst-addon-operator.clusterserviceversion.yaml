@@ -1,0 +1,46 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: '[]'
+    capabilities: Basic Install
+  name: starburst-addon-operator.v0.0.0
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - description: StarburstAddon is the Schema for the starburstaddons API
+      displayName: Starburst Addon
+      kind: StarburstAddon
+      name: starburstaddons.managed-tenants.redhat.com.starburst-addon-operator
+      version: v1alpha1
+  description: Starburst Addon
+  displayName: Starburst Addon
+  icon:
+  - base64data: ""
+    mediatype: ""
+  install:
+    spec:
+      deployments: null
+    strategy: ""
+  installModes:
+  - supported: true
+    type: OwnNamespace
+  - supported: false
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: false
+    type: AllNamespaces
+  keywords:
+  - key
+  - word
+  - s
+  links:
+  - name: Starburst Addon
+    url: https://starburst-addon.domain
+  maturity: alpha
+  provider:
+    name: Me
+  version: 0.0.0

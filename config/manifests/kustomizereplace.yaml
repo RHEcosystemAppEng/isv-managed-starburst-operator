@@ -1,0 +1,68 @@
+# inject enterprise group
+- source:
+    fieldPath: data.GROUP
+    kind: ConfigMap
+    name: enterprise-info
+  targets:
+  - fieldPaths:
+    - webhooks.0.rules.0.apiGroups.0
+    select:
+      kind: ValidatingWebhookConfiguration
+      name: validate-enterprise-webhook-configuration
+  - fieldPaths:
+    - spec.customresourcedefinitions.required.0.name
+    select:
+      kind: ClusterServiceVersion
+      name: starburst-addon-operator.v0.0.0
+    options:
+      delimiter: .
+      index: 1
+
+# inject enterprise version
+- source:
+    fieldPath: data.VERSION
+    kind: ConfigMap
+    name: enterprise-info
+  targets:
+  - fieldPaths:
+    - webhooks.0.rules.0.apiVersions.0
+    select:
+      kind: ValidatingWebhookConfiguration
+      name: validate-enterprise-webhook-configuration
+  - fieldPaths:
+    - spec.customresourcedefinitions.required.0.version
+    select:
+      kind: ClusterServiceVersion
+      name: starburst-addon-operator.v0.0.0
+
+# inject enterprise kind
+- source:
+    fieldPath: data.KIND
+    kind: ConfigMap
+    name: enterprise-info
+  targets:
+  - fieldPaths:
+    - spec.customresourcedefinitions.required.0.kind
+    select:
+      kind: ClusterServiceVersion
+      name: starburst-addon-operator.v0.0.0
+
+# inject enterprise plural
+- source:
+    fieldPath: data.PLURAL
+    kind: ConfigMap
+    name: enterprise-info
+  targets:
+  - fieldPaths:
+    - webhooks.0.rules.0.resources.0
+    select:
+      kind: ValidatingWebhookConfiguration
+      name: validate-enterprise-webhook-configuration
+  - fieldPaths:
+    - spec.customresourcedefinitions.required.0.name
+    select:
+      kind: ClusterServiceVersion
+      name: starburst-addon-operator.v0.0.0
+    options:
+      delimiter: .
+      index: 0

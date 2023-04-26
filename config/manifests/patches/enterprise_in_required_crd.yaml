@@ -1,0 +1,11 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  name: starburst-addon-operator.v0.0.0
+  namespace: placeholder
+spec:
+  customresourcedefinitions:
+    required:
+    - kind: replace-me-with-enterprise-kind
+      name: replace-me-with-enterprise-plural.replace-me-with-enterprise-group
+      version: replace-me-with-enterprise-version

@@ -1,0 +1,19 @@
+domain: starburst-addon-operator
+layout:
+- go.kubebuilder.io/v3
+plugins:
+  manifests.sdk.operatorframework.io/v2: {}
+  scorecard.sdk.operatorframework.io/v2: {}
+projectName: starburst-addon-operator
+repo: github.com/starburst-addon-operator
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: starburst-addon-operator
+  group: managed-tenants.redhat.com
+  kind: StarburstAddon
+  path: github.com/starburst-addon-operator/api/v1alpha1
+  version: v1alpha1
+version: "3"
