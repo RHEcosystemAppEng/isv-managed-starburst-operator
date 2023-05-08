@@ -1,5 +1,5 @@
 # This kustomization.yaml is not intended to be run by itself,
 # It should be run by config/default
 resources:
-- bases/managed-tenants.redhat.com.starburst-addon-operator_starburstaddons.yaml
+- bases/managed-tenants.redhat.com.isv-managed-starburst-operator_starburstaddons.yaml
 #+kubebuilder:scaffold:crdkustomizeresource

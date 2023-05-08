@@ -1,10 +1,10 @@
-apiVersion: managed-tenants.redhat.com.starburst-addon-operator/v1alpha1
+apiVersion: managed-tenants.redhat.com.isv-managed-starburst-operator/v1alpha1
 kind: StarburstAddon
 metadata:
   labels:
     app.kubernetes.io/name: starburstaddon
     app.kubernetes.io/instance: starburstaddon-sample
-    app.kubernetes.io/part-of: starburst-addon-operator
+    app.kubernetes.io/part-of: isv-managed-starburst-operator
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/created-by: starburst-addon-operator
+    app.kubernetes.io/created-by: isv-managed-starburst-operator
   name: starburstaddon-sample

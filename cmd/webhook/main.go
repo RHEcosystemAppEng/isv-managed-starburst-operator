@@ -20,7 +20,7 @@ import (
 	"flag"
 	"os"
 
-	"github.com/starburst-addon-operator/pkg/webhook"
+	"github.com/isv-managed-starburst-operator/pkg/webhook"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -37,7 +37,7 @@ func main() {
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
 
-	logger := ctrl.Log.WithName("starburst-addon-operator-webhook")
+	logger := ctrl.Log.WithName("isv-managed-starburst-operator-webhook")
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
 	// create the manager
@@ -46,7 +46,7 @@ func main() {
 		MetricsBindAddress:     webhook.Flags.MetricsAddr,
 		HealthProbeBindAddress: webhook.Flags.ProbeAddr,
 		LeaderElection:         webhook.Flags.EnableLeaderElection,
-		LeaderElectionID:       "4769ef65.starburst-addon-operator-webhook",
+		LeaderElectionID:       "4769ef65.isv-managed-starburst-operator-webhook",
 	})
 	if err != nil {
 		logger.Error(err, "unable to start manager")

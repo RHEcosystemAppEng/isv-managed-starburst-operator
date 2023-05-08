@@ -1,7 +1,7 @@
 apiVersion: operators.coreos.com/v1alpha1
 kind: ClusterServiceVersion
 metadata:
-  name: starburst-addon-operator.v0.0.0
+  name: isv-managed-starburst-operator.v0.0.0
   namespace: placeholder
 spec:
   customresourcedefinitions:

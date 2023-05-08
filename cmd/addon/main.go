@@ -31,9 +31,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
+	"github.com/isv-managed-starburst-operator/api/v1alpha1"
+	"github.com/isv-managed-starburst-operator/pkg/addon"
 	promv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/starburst-addon-operator/api/v1alpha1"
-	"github.com/starburst-addon-operator/pkg/addon"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -69,7 +69,7 @@ func main() {
 		Port:                   9443,
 		HealthProbeBindAddress: addon.Flags.ProbeAddr,
 		LeaderElection:         addon.Flags.EnableLeaderElection,
-		LeaderElectionID:       "2827ef65.starburst-addon-operator",
+		LeaderElectionID:       "2827ef65.isv-managed-starburst-operator",
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")

@@ -1,4 +1,4 @@
-module github.com/starburst-addon-operator
+module github.com/isv-managed-starburst-operator
 
 go 1.19
 

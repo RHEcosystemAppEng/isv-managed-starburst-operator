@@ -6,7 +6,7 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - managed-tenants.redhat.com.starburst-addon-operator
+  - managed-tenants.redhat.com.isv-managed-starburst-operator
   resources:
   - starburstaddons
   verbs:
@@ -18,13 +18,13 @@ rules:
   - update
   - watch
 - apiGroups:
-  - managed-tenants.redhat.com.starburst-addon-operator
+  - managed-tenants.redhat.com.isv-managed-starburst-operator
   resources:
   - starburstaddons/finalizers
   verbs:
   - update
 - apiGroups:
-  - managed-tenants.redhat.com.starburst-addon-operator
+  - managed-tenants.redhat.com.isv-managed-starburst-operator
   resources:
   - starburstaddons/status
   verbs:

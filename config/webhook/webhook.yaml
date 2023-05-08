@@ -27,7 +27,7 @@ webhooks:
       path: /validate-enterprise
       port: 0
   failurePolicy: Fail
-  name: validate-enterprise-webhook.managed-tenants.redhat.com.starburst-addon-operator
+  name: validate-enterprise-webhook.managed-tenants.redhat.com.isv-managed-starburst-operator
   rules:
   - apiGroups:
     - replace-me-with-enterprise-group
@@ -51,11 +51,11 @@ metadata:
   namespace: system
   labels:
     app.kubernetes.io/component: validation-webhook
-    app.kubernetes.io/created-by: starburst-addon-operator
+    app.kubernetes.io/created-by: isv-managed-starburst-operator
     app.kubernetes.io/instance: validation-webhook-manager
     app.kubernetes.io/managed-by: kustomize
     app.kubernetes.io/name: deployment
-    app.kubernetes.io/part-of: starburst-addon-operator
+    app.kubernetes.io/part-of: isv-managed-starburst-operator
     control-plane: validation-webhook-manager
 spec:
   selector:

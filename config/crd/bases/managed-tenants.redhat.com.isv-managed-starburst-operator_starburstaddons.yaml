@@ -1,12 +1,13 @@
+---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.11.2
   creationTimestamp: null
-  name: starburstaddons.managed-tenants.redhat.com.starburst-addon-operator
+  name: starburstaddons.managed-tenants.redhat.com.isv-managed-starburst-operator
 spec:
-  group: managed-tenants.redhat.com.starburst-addon-operator
+  group: managed-tenants.redhat.com.isv-managed-starburst-operator
   names:
     kind: StarburstAddon
     listKind: StarburstAddonList
@@ -42,9 +43,3 @@ spec:
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: null
-  storedVersions: null

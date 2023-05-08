@@ -1,19 +1,19 @@
-domain: starburst-addon-operator
+domain: isv-managed-starburst-operator
 layout:
 - go.kubebuilder.io/v3
 plugins:
   manifests.sdk.operatorframework.io/v2: {}
   scorecard.sdk.operatorframework.io/v2: {}
-projectName: starburst-addon-operator
-repo: github.com/starburst-addon-operator
+projectName: isv-managed-starburst-operator
+repo: github.com/isv-managed-starburst-operator
 resources:
 - api:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: starburst-addon-operator
+  domain: isv-managed-starburst-operator
   group: managed-tenants.redhat.com
   kind: StarburstAddon
-  path: github.com/starburst-addon-operator/api/v1alpha1
+  path: github.com/isv-managed-starburst-operator/api/v1alpha1
   version: v1alpha1
 version: "3"

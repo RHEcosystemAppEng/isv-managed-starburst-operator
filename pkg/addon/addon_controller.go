@@ -19,11 +19,11 @@ package addon
 import (
 	"context"
 	"fmt"
+	"github.com/isv-managed-starburst-operator/api/v1alpha1"
+	"github.com/isv-managed-starburst-operator/pkg/isv"
 	"github.com/mitchellh/mapstructure"
 	configv1 "github.com/openshift/api/config/v1"
 	promv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/starburst-addon-operator/api/v1alpha1"
-	"github.com/starburst-addon-operator/pkg/isv"
 	"gopkg.in/yaml.v3"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
@@ -48,12 +48,12 @@ type StarburstAddonReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=managed-tenants.redhat.com.starburst-addon-operator=starburstaddons,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=managed-tenants.redhat.com.starburst-addon-operator=starburstaddons/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=managed-tenants.redhat.com.starburst-addon-operator=starburstaddons/finalizers,verbs=update
-// +kubebuilder:rbac:groups=managed-tenants.redhat.com.starburst-addon-operator=starburstenterprises,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=managed-tenants.redhat.com.starburst-addon-operator=starburstenterprises/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=managed-tenants.redhat.com.starburst-addon-operator=starburstenterprises/finalizers,verbs=update
+// +kubebuilder:rbac:groups=managed-tenants.redhat.com.isv-managed-starburst-operator=starburstaddons,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=managed-tenants.redhat.com.isv-managed-starburst-operator=starburstaddons/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=managed-tenants.redhat.com.isv-managed-starburst-operator=starburstaddons/finalizers,verbs=update
+// +kubebuilder:rbac:groups=managed-tenants.redhat.com.isv-managed-starburst-operator=starburstenterprises,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=managed-tenants.redhat.com.isv-managed-starburst-operator=starburstenterprises/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=managed-tenants.redhat.com.isv-managed-starburst-operator=starburstenterprises/finalizers,verbs=update
 // +kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch;create;update;patch
 func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
