@@ -1,7 +1,7 @@
 # inject webhook service port to deployment (expose) and webhook (send)
 - source:
     kind: Service
-    name: validate-enterprise-webhook-service
+    name: validate-enterprise-webhook-svc
     fieldPath: spec.ports.0.port
   targets:
     - select:
@@ -18,7 +18,7 @@
 # inject webhook service targetPort to deployment (listen)
 - source:
     kind: Service
-    name: validate-enterprise-webhook-service
+    name: validate-enterprise-webhook-svc
     fieldPath: spec.ports.0.targetPort
   targets:
     - select:

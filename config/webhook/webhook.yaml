@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: validate-enterprise-webhook-service
+  name: validate-enterprise-webhook-svc
   namespace: system
 spec:
   ports:
@@ -22,7 +22,7 @@ webhooks:
   clientConfig:
     caBundle: Cg==
     service:
-      name: validate-enterprise-webhook-service
+      name: validate-enterprise-webhook-svc
       namespace: system
       path: /validate-enterprise
       port: 0

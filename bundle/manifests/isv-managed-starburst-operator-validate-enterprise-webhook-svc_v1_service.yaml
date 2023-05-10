@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   creationTimestamp: null
-  name: isv-managed-starburst-operator-validate-enterprise-webhook-service
+  name: isv-managed-starburst-operator-validate-enterprise-webhook-svc
 spec:
   ports:
   - port: 9443
