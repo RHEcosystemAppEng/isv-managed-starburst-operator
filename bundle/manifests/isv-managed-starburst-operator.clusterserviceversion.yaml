@@ -20,7 +20,7 @@ metadata:
         }
       ]
     capabilities: Basic Install
-    createdAt: "2023-05-08T21:17:25Z"
+    createdAt: "2023-05-09T18:30:35Z"
     operators.operatorframework.io/builder: operator-sdk-v1.28.1
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
   name: isv-managed-starburst-operator.v0.1.0
@@ -375,13 +375,13 @@ spec:
         serviceAccountName: isv-managed-starburst-operator-controller-manager
     strategy: deployment
   installModes:
-  - supported: false
+  - supported: true
     type: OwnNamespace
   - supported: false
     type: SingleNamespace
   - supported: false
     type: MultiNamespace
-  - supported: true
+  - supported: false
     type: AllNamespaces
   keywords:
   - tmihalac@redhat.com
