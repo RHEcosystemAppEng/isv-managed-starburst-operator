@@ -8,7 +8,7 @@
     - webhooks.0.rules.0.apiGroups.0
     select:
       kind: ValidatingWebhookConfiguration
-      name: validate-enterprise-webhook-configuration
+      name: validate-isv-webhook-configuration
   - fieldPaths:
     - spec.customresourcedefinitions.required.0.name
     select:
@@ -28,7 +28,7 @@
     - webhooks.0.rules.0.apiVersions.0
     select:
       kind: ValidatingWebhookConfiguration
-      name: validate-enterprise-webhook-configuration
+      name: validate-isv-webhook-configuration
   - fieldPaths:
     - spec.customresourcedefinitions.required.0.version
     select:
@@ -57,7 +57,7 @@
     - webhooks.0.rules.0.resources.0
     select:
       kind: ValidatingWebhookConfiguration
-      name: validate-enterprise-webhook-configuration
+      name: validate-isv-webhook-configuration
   - fieldPaths:
     - spec.customresourcedefinitions.required.0.name
     select:

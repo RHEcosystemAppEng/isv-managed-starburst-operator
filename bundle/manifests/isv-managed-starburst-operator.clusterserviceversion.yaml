@@ -20,7 +20,7 @@ metadata:
         }
       ]
     capabilities: Basic Install
-    createdAt: "2023-05-09T18:30:35Z"
+    createdAt: "2023-05-11T15:06:51Z"
     operators.operatorframework.io/builder: operator-sdk-v1.28.1
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
   name: isv-managed-starburst-operator.v0.1.0
@@ -245,7 +245,7 @@ spec:
           app.kubernetes.io/name: deployment
           app.kubernetes.io/part-of: isv-managed-starburst-operator
           control-plane: validation-webhook-manager
-        name: isv-managed-starburst-operator-validate-enterprise-webhook
+        name: isv-managed-starburst-operator-validate-isv-webhook
         spec:
           replicas: 1
           selector:
@@ -396,9 +396,9 @@ spec:
   - admissionReviewVersions:
     - v1
     containerPort: 9443
-    deploymentName: isv-managed-starburst-operator-validate-enterprise-webhook
+    deploymentName: isv-managed-starburst-operator-validate-isv-webhook
     failurePolicy: Fail
-    generateName: validate-enterprise-webhook.managed-tenants.redhat.com.isv-managed-starburst-operator
+    generateName: validate-isv-webhook.managed-tenants.redhat.com.isv-managed-starburst-operator
     rules:
     - apiGroups:
       - charts.starburstdata.com
