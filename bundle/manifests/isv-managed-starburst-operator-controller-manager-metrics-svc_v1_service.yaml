@@ -10,7 +10,7 @@ metadata:
     app.kubernetes.io/name: service
     app.kubernetes.io/part-of: isv-managed-starburst-operator
     control-plane: controller-manager
-  name: isv-managed-starburst-operator-controller-manager-metrics-service
+  name: isv-managed-starburst-operator-controller-manager-metrics-svc
 spec:
   ports:
   - name: https
