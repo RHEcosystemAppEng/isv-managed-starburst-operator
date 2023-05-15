@@ -1,7 +1,7 @@
 # inject webhook service port to deployment (expose) and webhook (send)
 - source:
     kind: Service
-    name: validate-isv-webhook-svc
+    name: validate-isv-webhook-service
     fieldPath: spec.ports.0.port
   targets:
     - select:
@@ -18,7 +18,7 @@
 # inject webhook service targetPort to deployment (listen)
 - source:
     kind: Service
-    name: validate-isv-webhook-svc
+    name: validate-isv-webhook-service
     fieldPath: spec.ports.0.targetPort
   targets:
     - select:
