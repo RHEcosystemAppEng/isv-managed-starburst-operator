@@ -33,6 +33,7 @@ import (
 
 	"github.com/isv-managed-starburst-operator/api/v1alpha1"
 	"github.com/isv-managed-starburst-operator/pkg/addon"
+	configv1 "github.com/openshift/api/config/v1"
 	promv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	//+kubebuilder:scaffold:imports
 )
@@ -47,6 +48,7 @@ func init() {
 
 	utilruntime.Must(v1alpha1.AddToScheme(scheme))
 	utilruntime.Must(promv1.AddToScheme(scheme))
+	utilruntime.Must(configv1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
