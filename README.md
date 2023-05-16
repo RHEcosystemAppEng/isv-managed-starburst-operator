@@ -1,103 +1,94 @@
-# ISV Addon operator template
+# starburst-addon
+// TODO(user): Add simple overview of use/purpose
 
-[Sequence Diagram Quick Access](#sequence-diagram)
+## Description
+// TODO(user): An in-depth paragraph about your project and overview of use
 
-## Prologue
+## Getting Started
+You’ll need a Kubernetes cluster to run against. You can use [KIND](https://sigs.k8s.io/kind) to get a local cluster for testing, or run against a remote cluster.
+**Note:** Your controller will automatically use the current context in your kubeconfig file (i.e. whatever cluster `kubectl cluster-info` shows).
 
-This repository holds a template for creating ISV Addon operator in OSD, it is a starting point from which to start developing your operator<br/>
-The design leverages *OLM* dependencies mechanism for operator dependencies.<br/>
-A *Dynamic Admission Webhook* for provisioning the *Enterprise* CR modifications.<br/>
-And a *Finalizer* for cleaning up the *Enterprise* CR.
+### Running on the cluster
+1. Install Instances of Custom Resources:
 
-## Repository content
-
-Next to this document, you'll find the template operator with its bundle manifest (deployed to *quay.io*).
-
-The [isv-addon](/isv-addon) controller is the shell for the new design, this part will be implemented in our current operator, if this design gets accepted.
-
-The [olm-catalog](/olm-catalog) folder holds the sources for the OLM catalog.
-
-## Design walkthrough
-
-The *isv-addon* describes the *enterprise* package as its dependency and runs 2 controllers.<br/>
-The *addon* controller creates the *ISV* CR.<br/>
-The *webhook* controller provisions all *ISV* CRs.<br/>
-The *addon* controller leverages a *finalizer* for cleaning up existing *ISV* CRs.
-
-In this design, the *addon* controller handles the following actions:<br/>
-Reconciling the required resources, i.e. secrets, prometheus servers, and service monitors.<br/>
-And eventually deploying the required *ISV* CR.
-
-## Entity Relationship
-
-## Sequence Diagram
-
-```mermaid
-sequenceDiagram
-  participant P as Platform
-  participant A as Addon Controller
-  participant I as ISV operator
-  participant V as Validation Webhook
-  actor U as User
-
-  P->>+A: Create Addon CR
-  activate A
-  A->>V: ISV CR Create Allowed?
-  V-->>A: Create Allowed!
-  A->>I: Create ISV CR
-  activate I
-
-  U->>V: ISV CR Delete Allowed?
-  V--xU: Delete Denied
-  U->>V: ISV CR Update Allowed?
-  V--xU: Update Denied!
-  U->>V: New ISV CR Create Allowed?
-  V--xU: Create Denied!
-
-  P->>A: Delete Addon CR
-  A->>V: ISV CR Delete Allowed?
-  V-->>A: Delete Allowed!
-  A->>I: Delete ISV CR
-  deactivate I
-  deactivate A
+```sh
+kubectl apply -f config/samples/
 ```
 
-## Implementing ISV addon operator using this template
-New ISV operator written using this template repository must implement this method
-```go
-type CommonISV interface {
-    GetISVPrefix() string
-}
+2. Build and push your image to the location specified by `IMG`:
+	
+```sh
+make docker-build docker-push IMG=<some-registry>/starburst-addon:tag
 ```
-In addition the file [enterprise-crd.env](isv-addon%2Fenterprise-crd.env) should also be filled with the appropriate values,
-it is used by kustomize for dynamic values, for example:
-```dotenv
-KIND=StarburstEnterprise
-GROUP=example.com.example.com
-VERSION=v1alpha1
-PLURAL=starburstenterprises
+	
+3. Deploy the controller to the cluster with the image specified by `IMG`:
+
+```sh
+make deploy IMG=<some-registry>/starburst-addon:tag
 ```
 
-If ISV specific logic is needed it should be written in functions which should be added to the isvCustomFuncs array.<br/>
-If modification of the ISV cr read from the secret is needed, it should be written in functions which should be added to the isvCustomPatches array.<br/>
-Then an init method needs to be added to the [load_isv_funcs.go](isv-addon%2Fpkg%2Fisv%2Fload_isv_funcs.go) and in it the function specified above should be added to the appropriate arrays for example:
+### Uninstall CRDs
+To delete the CRDs from the cluster:
 
-```go
-func init() {
-    isvCustomFuncs = append(isvCustomFuncs, funcX)
-    isvCustomPatches = append(isvCustomPatches, funcY)
-}
+```sh
+make uninstall
 ```
 
-Addon Operator dependencies should be specified in the [dependencies.yaml](isv-addon%2Fbundle%2Fmetadata%2Fdependencies.yaml) file including dependencies to the isv-operator, for example:
-```yaml
-dependencies:
-- type: olm.package
-  value:
-    packageName: isv-operator(starburst-operator for example)
-    version: "0.0.1"
-- type: olm.package
-  value:
-    packageName: ose-prometheus-operator
-    version: "4.10.0"
+### Undeploy controller
+UnDeploy the controller to the cluster:
+
+```sh
+make undeploy
 ```
+
+## Contributing
+// TODO(user): Add detailed information on how you would like others to contribute to this project
+
+### How it works
+This project aims to follow the Kubernetes [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/)
+
+It uses [Controllers](https://kubernetes.io/docs/concepts/architecture/controller/) 
+which provides a reconcile function responsible for synchronizing resources untile the desired state is reached on the cluster 
+
+### Test It Out
+1. Install the CRDs into the cluster:
+
+```sh
+make install
+```
+
+2. Run your controller (this will run in the foreground, so switch to a new terminal if you want to leave it running):
+
+```sh
+make run
+```
+
+**NOTE:** You can also run this in one step by running: `make install run`
+
+### Modifying the API definitions
+If you are editing the API definitions, generate the manifests such as CRs or CRDs using:
+
+```sh
+make manifests
+```
+
+**NOTE:** Run `make --help` for more information on all potential `make` targets
+
+More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html)
+
+## License
+
+Copyright 2023.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+

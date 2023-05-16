@@ -1,0 +1,10 @@
+apiVersion: starburst.isv.managed/v1alpha1
+kind: StarburstAddon
+metadata:
+  labels:
+    app.kubernetes.io/name: starburstaddon
+    app.kubernetes.io/instance: starburstaddon-sample
+    app.kubernetes.io/part-of: starburst-addon
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: starburst-addon
+  name: starburstaddon-sample

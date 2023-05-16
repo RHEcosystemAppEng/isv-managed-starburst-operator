@@ -1,9 +1,0 @@
-dependencies:
-- type: olm.package
-  value:
-    packageName: enterprise
-    version: "0.0.1"
-- type: olm.package
-  value:
-    packageName: ose-prometheus-operator
-    version: "4.10.0"
