@@ -4,7 +4,7 @@ metadata:
   annotations:
     alm-examples: '[]'
     capabilities: Basic Install
-  name: isv-managed-starburst-operator.v0.0.0
+  name: starburst-addon.v0.0.0
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -13,10 +13,10 @@ spec:
     - description: StarburstAddon is the Schema for the starburstaddons API
       displayName: Starburst Addon
       kind: StarburstAddon
-      name: starburstaddons.managed-tenants.redhat.com.isv-managed-starburst-operator
+      name: starburstaddons.starburst.isv.managed
       version: v1alpha1
-  description: isv-managed-starburst-operator
-  displayName: isv-managed-starburst-operator
+  description: starburst-addon
+  displayName: starburst-addon
   icon:
   - base64data: ""
     mediatype: ""
@@ -34,10 +34,10 @@ spec:
   - supported: false
     type: AllNamespaces
   keywords:
-  - tmihalac@redhat.com
+  - Red Hat
   links:
-  - name: Isv Managed Starburst Operator
-    url: https://isv-managed-starburst-operator.domain
+  - name: Starburst Addon
+    url: https://starburst-addon.domain
   maturity: alpha
   provider:
     name: Red Hat

@@ -3,7 +3,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: validate-isv-webhook
+  name: validate-enterprise-webhook
   namespace: system
 spec:
   template:

@@ -8,12 +8,12 @@
     - webhooks.0.rules.0.apiGroups.0
     select:
       kind: ValidatingWebhookConfiguration
-      name: validate-isv-webhook-configuration
+      name: validate-enterprise-webhook-configuration
   - fieldPaths:
     - spec.customresourcedefinitions.required.0.name
     select:
       kind: ClusterServiceVersion
-      name: isv-managed-starburst-operator.v0.0.0
+      name: starburst-addon.v0.0.0
     options:
       delimiter: .
       index: 1
@@ -28,12 +28,12 @@
     - webhooks.0.rules.0.apiVersions.0
     select:
       kind: ValidatingWebhookConfiguration
-      name: validate-isv-webhook-configuration
+      name: validate-enterprise-webhook-configuration
   - fieldPaths:
     - spec.customresourcedefinitions.required.0.version
     select:
       kind: ClusterServiceVersion
-      name: isv-managed-starburst-operator.v0.0.0
+      name: starburst-addon.v0.0.0
 
 # inject enterprise kind
 - source:
@@ -45,7 +45,7 @@
     - spec.customresourcedefinitions.required.0.kind
     select:
       kind: ClusterServiceVersion
-      name: isv-managed-starburst-operator.v0.0.0
+      name: starburst-addon.v0.0.0
 
 # inject enterprise plural
 - source:
@@ -57,12 +57,12 @@
     - webhooks.0.rules.0.resources.0
     select:
       kind: ValidatingWebhookConfiguration
-      name: validate-isv-webhook-configuration
+      name: validate-enterprise-webhook-configuration
   - fieldPaths:
     - spec.customresourcedefinitions.required.0.name
     select:
       kind: ClusterServiceVersion
-      name: isv-managed-starburst-operator.v0.0.0
+      name: starburst-addon.v0.0.0
     options:
       delimiter: .
       index: 0

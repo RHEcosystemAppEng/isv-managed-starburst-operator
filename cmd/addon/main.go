@@ -69,7 +69,7 @@ func main() {
 		Port:                   9443,
 		HealthProbeBindAddress: addon.Flags.ProbeAddr,
 		LeaderElection:         addon.Flags.EnableLeaderElection,
-		LeaderElectionID:       "2827ef65.isv-managed-starburst-operator",
+		LeaderElectionID:       "2827ef65.isv.managed",
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")

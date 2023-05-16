@@ -1,29 +1,29 @@
 # inject webhook service port to deployment (expose) and webhook (send)
 - source:
     kind: Service
-    name: validate-isv-webhook-service
+    name: validate-enterprise-webhook-service
     fieldPath: spec.ports.0.port
   targets:
     - select:
         kind: Deployment
-        name: validate-isv-webhook
+        name: validate-enterprise-webhook
       fieldPaths:
       - spec.template.spec.containers.0.ports.0.containerPort
     - select:
         kind: ValidatingWebhookConfiguration
-        name: validate-isv-webhook-configuration
+        name: validate-enterprise-webhook-configuration
       fieldPaths:
       - webhooks.0.clientConfig.service.port
 
 # inject webhook service targetPort to deployment (listen)
 - source:
     kind: Service
-    name: validate-isv-webhook-service
+    name: validate-enterprise-webhook-service
     fieldPath: spec.ports.0.targetPort
   targets:
     - select:
         kind: Deployment
-        name: validate-isv-webhook
+        name: validate-enterprise-webhook
       fieldPaths:
       - spec.template.spec.containers.0.command.3
       options:

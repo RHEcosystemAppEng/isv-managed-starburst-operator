@@ -6,7 +6,7 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - managed-tenants.redhat.com.isv-managed-starburst-operator
+  - starburst.isv.managed
   resources:
   - starburstaddons
   verbs:
@@ -18,19 +18,20 @@ rules:
   - update
   - watch
 - apiGroups:
-  - managed-tenants.redhat.com.isv-managed-starburst-operator
+  - starburst.isv.managed
   resources:
   - starburstaddons/finalizers
   verbs:
   - update
 - apiGroups:
-  - managed-tenants.redhat.com.isv-managed-starburst-operator
+  - starburst.isv.managed
   resources:
   - starburstaddons/status
   verbs:
   - get
   - patch
   - update
+# TODO do we need secrets at the cluster level??
 - apiGroups:
   - ""
   resources:

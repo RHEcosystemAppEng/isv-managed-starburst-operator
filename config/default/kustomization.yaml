@@ -9,8 +9,8 @@ resources:
 # [PROMETHEUS] To enable prometheus monitor, uncomment all sections with 'PROMETHEUS'.
 #- ../prometheus
 
-namespace: isv-managed-starburst-operator-system
-namePrefix: isv-managed-starburst-operator-
+namespace: starburst-addon-system
+namePrefix: starburst-addon-
 
 #commonLabels:
 #  someName: someValue
@@ -18,7 +18,7 @@ namePrefix: isv-managed-starburst-operator-
 images:
 - name: operator
   newName: quay.io/tmihalac/isv-managed-starburst-operator
-  newTag: v0.1.0
+  newTag: v0.5.0
 
 # Protect the /metrics endpoint by putting it behind auth.
 patchesStrategicMerge:

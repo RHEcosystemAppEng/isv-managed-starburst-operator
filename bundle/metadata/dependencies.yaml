@@ -2,8 +2,8 @@ dependencies:
 - type: olm.package
   value:
     packageName: starburst-enterprise-helm-operator-rhmp
-    version: "380.3.2"
+    version: "402.1.0"
 - type: olm.package
   value:
-    packageName: ose-prometheus-operator
+    packageName: rhods-prometheus-operator
     version: "4.10.0"

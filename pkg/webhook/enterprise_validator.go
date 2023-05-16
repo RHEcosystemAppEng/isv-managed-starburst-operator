@@ -206,5 +206,5 @@ func isUserAllowed(userInfo authenticationv1.UserInfo) bool {
 
 	return infoArray[0] == "system" &&
 		infoArray[1] == "serviceaccount" &&
-		infoArray[3] == "isv-managed-starburst-operator-controller-manager"
+		infoArray[3] == "starburst-addon-controller-manager"
 }

@@ -48,12 +48,12 @@ type StarburstAddonReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=managed-tenants.redhat.com.isv-managed-starburst-operator=starburstaddons,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=managed-tenants.redhat.com.isv-managed-starburst-operator=starburstaddons/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=managed-tenants.redhat.com.isv-managed-starburst-operator=starburstaddons/finalizers,verbs=update
-// +kubebuilder:rbac:groups=managed-tenants.redhat.com.isv-managed-starburst-operator=starburstenterprises,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=managed-tenants.redhat.com.isv-managed-starburst-operator=starburstenterprises/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=managed-tenants.redhat.com.isv-managed-starburst-operator=starburstenterprises/finalizers,verbs=update
+// +kubebuilder:rbac:groups=starburst.isv.managed,resources=starburstaddons,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=starburst.isv.managed,resources=starburstaddons/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=starburst.isv.managed.com,resources=starburstaddons/finalizers,verbs=update
+// +kubebuilder:rbac:groups=charts.starburstdata.com.com,resources=starburstenterprises,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=charts.starburstdata.com,resources=starburstenterprises/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=charts.starburstdata.com,resources=starburstenterprises/finalizers,verbs=update
 // +kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch;create;update;patch
 func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)

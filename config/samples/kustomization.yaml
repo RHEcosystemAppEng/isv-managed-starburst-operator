@@ -1,4 +1,4 @@
 ## Append samples you want in your CSV to this file as resources ##
 resources:
-- managed-tenants.redhat.com_v1alpha1_starburstaddon.yaml
+- starburst_v1alpha1_starburstaddon.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples
