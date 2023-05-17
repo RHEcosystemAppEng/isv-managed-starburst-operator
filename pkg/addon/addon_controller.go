@@ -50,11 +50,17 @@ type StarburstAddonReconciler struct {
 
 // +kubebuilder:rbac:groups=starburst.isv.managed,resources=starburstaddons,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=starburst.isv.managed,resources=starburstaddons/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=starburst.isv.managed.com,resources=starburstaddons/finalizers,verbs=update
-// +kubebuilder:rbac:groups=charts.starburstdata.com.com,resources=starburstenterprises,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=starburst.isv.managed,resources=starburstaddons/finalizers,verbs=update
+// +kubebuilder:rbac:groups=charts.starburstdata.com,resources=starburstenterprises,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=charts.starburstdata.com,resources=starburstenterprises/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=charts.starburstdata.com,resources=starburstenterprises/finalizers,verbs=update
 // +kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch;create;update;patch
+// +kubebuilder:rbac:groups=monitoring.coreos.com,resources={alertmanagers,prometheuses,alertmanagerconfigs},verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=monitoring.coreos.com,resources=prometheusrules,verbs=get;list;watch;create;update;patch
+// +kubebuilder:rbac:groups=monitoring.coreos.com,resources=podmonitors,verbs=get;list;watch;update;patch
+// +kubebuilder:rbac:groups=monitoring.coreos.com,resources=servicemonitors,verbs=get;list;watch;update;patch;create;delete
+// +kubebuilder:rbac:groups=config.openshift.io,resources=clusterversions,verbs=get;list;watch;update;patch;create;delete
+
 func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 

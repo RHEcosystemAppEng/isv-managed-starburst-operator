@@ -16,7 +16,7 @@ spec:
       name: starburstaddons.starburst.isv.managed
       version: v1alpha1
   description: starburst-addon
-  displayName: starburst-addon
+  displayName: Starburst Managed ISV Operator
   icon:
   - base64data: ""
     mediatype: ""

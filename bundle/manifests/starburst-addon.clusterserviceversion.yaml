@@ -20,7 +20,7 @@ metadata:
         }
       ]
     capabilities: Basic Install
-    createdAt: "2023-05-16T15:52:02Z"
+    createdAt: "2023-05-16T19:10:31Z"
     operators.operatorframework.io/builder: operator-sdk-v1.28.1
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
   name: starburst-addon.v0.5.0
@@ -39,7 +39,7 @@ spec:
       name: starburstenterprises.charts.starburstdata.com
       version: v1alpha1
   description: starburst-addon
-  displayName: starburst-addon
+  displayName: Starburst Managed ISV Operator
   icon:
   - base64data: ""
     mediatype: ""
@@ -47,6 +47,102 @@ spec:
     spec:
       clusterPermissions:
       - rules:
+        - apiGroups:
+          - charts.starburstdata.com
+          resources:
+          - starburstenterprises
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - charts.starburstdata.com
+          resources:
+          - starburstenterprises/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - charts.starburstdata.com
+          resources:
+          - starburstenterprises/status
+          verbs:
+          - get
+          - patch
+          - update
+        - apiGroups:
+          - config.openshift.io
+          resources:
+          - clusterversions
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - ""
+          resources:
+          - secrets
+          verbs:
+          - create
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - monitoring.coreos.com
+          resources:
+          - alertmanagerconfigs
+          - alertmanagers
+          - prometheuses
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - monitoring.coreos.com
+          resources:
+          - podmonitors
+          verbs:
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - monitoring.coreos.com
+          resources:
+          - prometheusrules
+          verbs:
+          - create
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - monitoring.coreos.com
+          resources:
+          - servicemonitors
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
         - apiGroups:
           - starburst.isv.managed
           resources:
@@ -73,33 +169,6 @@ spec:
           - get
           - patch
           - update
-        - apiGroups:
-          - ""
-          resources:
-          - secrets
-          verbs:
-          - create
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - monitoring.coreos.com
-          resources:
-          - alertmanagers
-          - alertmanagers/finalizers
-          - alertmanagerconfigs
-          - prometheuses
-          - prometheuses/finalizers
-          - thanosrulers
-          - thanosrulers/finalizers
-          - servicemonitors
-          - podmonitors
-          - probes
-          - prometheusrules
-          verbs:
-          - '*'
         - apiGroups:
           - authentication.k8s.io
           resources:
