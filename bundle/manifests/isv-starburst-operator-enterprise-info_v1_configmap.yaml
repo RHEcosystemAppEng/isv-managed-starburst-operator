@@ -7,4 +7,4 @@ data:
 immutable: true
 kind: ConfigMap
 metadata:
-  name: starburst-addon-enterprise-info
+  name: isv-starburst-operator-enterprise-info

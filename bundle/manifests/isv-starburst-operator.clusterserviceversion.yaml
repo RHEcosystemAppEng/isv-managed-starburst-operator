@@ -9,21 +9,21 @@ metadata:
           "kind": "StarburstAddon",
           "metadata": {
             "labels": {
-              "app.kubernetes.io/created-by": "starburst-addon",
+              "app.kubernetes.io/created-by": "isv-starburst-operator",
               "app.kubernetes.io/instance": "starburstaddon-sample",
               "app.kubernetes.io/managed-by": "kustomize",
               "app.kubernetes.io/name": "starburstaddon",
-              "app.kubernetes.io/part-of": "starburst-addon"
+              "app.kubernetes.io/part-of": "isv-starburst-operator"
             },
             "name": "starburstaddon-sample"
           }
         }
       ]
     capabilities: Basic Install
-    createdAt: "2023-05-16T19:10:31Z"
+    createdAt: "2023-05-17T20:59:40Z"
     operators.operatorframework.io/builder: operator-sdk-v1.28.1
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
-  name: starburst-addon.v0.5.0
+  name: isv-starburst-operator.v0.17.0
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -38,8 +38,8 @@ spec:
     - kind: StarburstEnterprise
       name: starburstenterprises.charts.starburstdata.com
       version: v1alpha1
-  description: starburst-addon
-  displayName: Starburst Managed ISV Operator
+  description: "1"
+  displayName: ISV Managed
   icon:
   - base64data: ""
     mediatype: ""
@@ -207,17 +207,17 @@ spec:
           - get
           - patch
           - update
-        serviceAccountName: starburst-addon-controller-manager
+        serviceAccountName: isv-starburst-operator-controller-manager
       deployments:
       - label:
           app.kubernetes.io/component: manager
-          app.kubernetes.io/created-by: starburst-addon
+          app.kubernetes.io/created-by: isv-starburst-operator
           app.kubernetes.io/instance: controller-manager
           app.kubernetes.io/managed-by: kustomize
           app.kubernetes.io/name: deployment
-          app.kubernetes.io/part-of: starburst-addon
+          app.kubernetes.io/part-of: isv-starburst-operator
           control-plane: controller-manager
-        name: starburst-addon-controller-manager
+        name: isv-starburst-operator-controller-manager
         spec:
           replicas: 1
           selector:
@@ -276,7 +276,7 @@ spec:
                 - --health-probe-bind-address=:8081
                 - --metrics-bind-address=127.0.0.1:8080
                 - --leader-elect
-                image: quay.io/tmihalac/isv-managed-starburst-operator:v0.5.0
+                image: quay.io/tmihalac/isv-managed-starburst-operator:v0.17.0
                 livenessProbe:
                   httpGet:
                     path: /healthz
@@ -304,17 +304,17 @@ spec:
                     - ALL
               securityContext:
                 runAsNonRoot: true
-              serviceAccountName: starburst-addon-controller-manager
+              serviceAccountName: isv-starburst-operator-controller-manager
               terminationGracePeriodSeconds: 10
       - label:
           app.kubernetes.io/component: validation-webhook
-          app.kubernetes.io/created-by: starburst-addon
+          app.kubernetes.io/created-by: isv-starburst-operator
           app.kubernetes.io/instance: validation-webhook-manager
           app.kubernetes.io/managed-by: kustomize
           app.kubernetes.io/name: deployment
-          app.kubernetes.io/part-of: starburst-addon
+          app.kubernetes.io/part-of: isv-starburst-operator
           control-plane: validation-webhook-manager
-        name: starburst-addon-validate-enterprise-webhook
+        name: isv-starburst-operator-validate-enterprise-webhook
         spec:
           replicas: 1
           selector:
@@ -376,7 +376,7 @@ spec:
                 - --health-probe-bind-address=:8081
                 - --metrics-bind-address=127.0.0.1:8080
                 - --leader-elect
-                image: quay.io/tmihalac/isv-managed-starburst-operator:v0.5.0
+                image: quay.io/tmihalac/isv-managed-starburst-operator:v0.17.0
                 livenessProbe:
                   httpGet:
                     path: /healthz
@@ -406,7 +406,7 @@ spec:
                     - ALL
               securityContext:
                 runAsNonRoot: true
-              serviceAccountName: starburst-addon-controller-manager
+              serviceAccountName: isv-starburst-operator-controller-manager
               terminationGracePeriodSeconds: 10
       permissions:
       - rules:
@@ -441,7 +441,7 @@ spec:
           verbs:
           - create
           - patch
-        serviceAccountName: starburst-addon-controller-manager
+        serviceAccountName: isv-starburst-operator-controller-manager
     strategy: deployment
   installModes:
   - supported: true
@@ -455,17 +455,17 @@ spec:
   keywords:
   - Red Hat
   links:
-  - name: Starburst Addon
-    url: https://starburst-addon.domain
+  - name: Isv Starburst Operator
+    url: https://isv-starburst-operator.domain
   maturity: alpha
   provider:
     name: Red Hat
-  version: 0.5.0
+  version: 0.17.0
   webhookdefinitions:
   - admissionReviewVersions:
     - v1
     containerPort: 9443
-    deploymentName: starburst-addon-validate-enterprise-webhook
+    deploymentName: isv-starburst-operator-validate-enterprise-webhook
     failurePolicy: Fail
     generateName: validate-enterprise-webhook.starburst.isv.managed
     rules:
