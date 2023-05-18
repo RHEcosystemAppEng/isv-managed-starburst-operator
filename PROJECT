@@ -1,4 +1,4 @@
-domain: isv.managed.starburst
+domain: isv.managed
 layout:
 - go.kubebuilder.io/v3
 plugins:
