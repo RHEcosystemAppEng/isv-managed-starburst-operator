@@ -1,0 +1,44 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: '[]'
+    capabilities: Basic Install
+  name: isv-starburst-operator.v0.0.0
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - description: StarburstAddon is the Schema for the starburstaddons API
+      displayName: Starburst Addon
+      kind: StarburstAddon
+      name: starburstaddons.starburst.isv.managed
+      version: v1alpha1
+  description: "1"
+  displayName: ISV Managed
+  icon:
+  - base64data: ""
+    mediatype: ""
+  install:
+    spec:
+      deployments: null
+    strategy: ""
+  installModes:
+  - supported: true
+    type: OwnNamespace
+  - supported: false
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: false
+    type: AllNamespaces
+  keywords:
+  - Red Hat
+  links:
+  - name: Isv Starburst Operator
+    url: https://isv-starburst-operator.domain
+  maturity: alpha
+  provider:
+    name: Red Hat
+  version: 0.0.0
