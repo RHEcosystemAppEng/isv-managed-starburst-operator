@@ -5,8 +5,8 @@ metadata:
     app.kubernetes.io/name: clusterrolebinding
     app.kubernetes.io/instance: manager-rolebinding
     app.kubernetes.io/component: rbac
-    app.kubernetes.io/created-by: starburst-addon
-    app.kubernetes.io/part-of: starburst-addon
+    app.kubernetes.io/created-by: isv-starburst-operator
+    app.kubernetes.io/part-of: isv-starburst-operator
     app.kubernetes.io/managed-by: kustomize
   name: manager-rolebinding
 roleRef:

@@ -5,8 +5,8 @@ metadata:
     app.kubernetes.io/name: clusterrole
     app.kubernetes.io/instance: proxy-role
     app.kubernetes.io/component: kube-rbac-proxy
-    app.kubernetes.io/created-by: starburst-addon
-    app.kubernetes.io/part-of: starburst-addon
+    app.kubernetes.io/created-by: isv-starburst-operator
+    app.kubernetes.io/part-of: isv-starburst-operator
     app.kubernetes.io/managed-by: kustomize
   name: proxy-role
 rules:
