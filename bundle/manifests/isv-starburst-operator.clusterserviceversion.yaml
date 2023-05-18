@@ -39,7 +39,7 @@ spec:
       name: starburstenterprises.charts.starburstdata.com
       version: v1alpha1
   description: "1"
-  displayName: ISV Managed
+  displayName: ISV Starburst Operator
   icon:
   - base64data: ""
     mediatype: ""
