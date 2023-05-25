@@ -35,4 +35,6 @@ func LoadCustomPatches(ctx context.Context, cl client.Client, ns string, subject
 
 type CommonISV interface {
 	GetISVPrefix() string
+	GetAddonCRName() string
+	GetAddonCRNamespace() string
 }
