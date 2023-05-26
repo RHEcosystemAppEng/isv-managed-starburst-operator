@@ -126,8 +126,8 @@ func main() {
 
 func jumpstartAddon(client client.Client) error {
 	starburstAddon := &v1alpha1.StarburstAddon{}
-	crName := isv.CommonISVInstance.GetCRName()
-	crNamespace := isv.CommonISVInstance.GetCRNamespace()
+	crName := isv.CommonISVInstance.GetAddonCRName()
+	crNamespace := isv.CommonISVInstance.GetAddonCRNamespace()
 	err := client.Get(context.TODO(), types.NamespacedName{
 		Name:      crName,
 		Namespace: crNamespace,
