@@ -82,7 +82,7 @@ func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	// Secret
 	vault := &corev1.Secret{}
 	if err := r.Client.Get(ctx, types.NamespacedName{
-		Name:      isv.CommonISVInstance.GetISVPrefix() + "-addon",
+		Name:      "addon",
 		Namespace: req.Namespace,
 	}, vault); err != nil {
 
