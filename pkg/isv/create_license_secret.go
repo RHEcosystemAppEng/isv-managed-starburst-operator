@@ -202,7 +202,7 @@ func (starburst *Starburst) GetAddonCRName() string {
 }
 
 func (starburst *Starburst) GetAddonCRNamespace() string {
-	return "redhat-starburst-operator"
+	return "redhat-starburst-op"
 }
 
 func init() {
