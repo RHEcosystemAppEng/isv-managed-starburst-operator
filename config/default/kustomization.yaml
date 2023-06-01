@@ -17,8 +17,8 @@ namePrefix: isv-starburst-operator-
 
 images:
 - name: operator
-  newName: quay.io/tmihalac/isv-managed-starburst-operator
-  newTag: v0.45.0
+  newName: quay.io/tsisodia10/isv-managed-starburst-operator
+  newTag: v0.15.0
 
 # Protect the /metrics endpoint by putting it behind auth.
 patchesStrategicMerge:
