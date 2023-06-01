@@ -22,7 +22,7 @@ metadata:
     capabilities: Basic Install
     operators.operatorframework.io/builder: operator-sdk-v1.23.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
-  name: isv-starburst-operator.v0.15.0
+  name: isv-starburst-operator.v0.16.0
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -275,7 +275,7 @@ spec:
                 - --health-probe-bind-address=:8081
                 - --metrics-bind-address=127.0.0.1:8080
                 - --leader-elect
-                image: quay.io/tsisodia10/isv-managed-starburst-operator:v0.15.0
+                image: quay.io/tsisodia10/isv-managed-starburst-operator:v0.16.0
                 livenessProbe:
                   httpGet:
                     path: /healthz
@@ -375,7 +375,7 @@ spec:
                 - --health-probe-bind-address=:8081
                 - --metrics-bind-address=127.0.0.1:8080
                 - --leader-elect
-                image: quay.io/tsisodia10/isv-managed-starburst-operator:v0.15.0
+                image: quay.io/tsisodia10/isv-managed-starburst-operator:v0.16.0
                 livenessProbe:
                   httpGet:
                     path: /healthz
@@ -459,7 +459,7 @@ spec:
   maturity: alpha
   provider:
     name: Red Hat
-  version: 0.15.0
+  version: 0.16.0
   webhookdefinitions:
   - admissionReviewVersions:
     - v1
