@@ -64,6 +64,8 @@ type StarburstAddonReconciler struct {
 func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
+	fmt.Println("Start reconcile loop!!!")
+	fmt.Println("The r.Client is : ", r.Client)
 	// fetch subject addon
 	addon := &v1alpha1.StarburstAddon{}
 	if err := r.Client.Get(ctx, types.NamespacedName{
@@ -79,13 +81,15 @@ func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		return ctrl.Result{}, err
 	}
 
+	fmt.Println("Fetch vault secret!!!")
+
 	// Secret
 	vault := &corev1.Secret{}
 	if err := r.Client.Get(ctx, types.NamespacedName{
 		Name:      isv.CommonISVInstance.GetISVPrefix() + "-addon",
 		Namespace: req.Namespace,
 	}, vault); err != nil {
-
+		fmt.Println("Vault secret error :", err)
 		if k8serrors.IsNotFound(err) {
 			logger.Info("Addon Secret not found.")
 			return ctrl.Result{Requeue: true}, err
@@ -94,11 +98,14 @@ func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		return ctrl.Result{}, fmt.Errorf("could not get Addon Secret: %v", err)
 	}
 
+	fmt.Println("Fetch starburst CR !!!")
+
 	manifest := vault.Data["enterprise.yaml"]
 	if manifest == nil {
 		return ctrl.Result{}, fmt.Errorf("could not get value %v from Addon Secret", "enterprise.yaml")
 	}
 
+	fmt.Println("Start build enterprise resource!!!")
 	// build enterprise resource from file propagated by a secret created for the vault keys
 	desiredEnterprise, err := r.buildEnterpriseResource(ctx, addon, req.Namespace, manifest)
 	if err != nil {
@@ -108,6 +115,7 @@ func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 
 	finalizerName := isv.CommonISVInstance.GetISVPrefix() + "addons/finalizer"
 
+	fmt.Println("Check if object deleted!!!")
 	// cleanup for deletion
 	if !addon.ObjectMeta.DeletionTimestamp.IsZero() {
 		// object is currently being deleted
