@@ -96,7 +96,7 @@ func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 
 	manifest := vault.Data["starburstenterprise.yaml"]
 	if manifest == nil {
-		return ctrl.Result{}, fmt.Errorf("could not get value %v from Addon Secret", "enterprise.yaml")
+		return ctrl.Result{}, fmt.Errorf("could not get value %v from Addon Secret", "starburstenterprise.yaml")
 	}
 
 	// build enterprise resource from file propagated by a secret created for the vault keys
