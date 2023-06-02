@@ -94,7 +94,7 @@ func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		return ctrl.Result{}, fmt.Errorf("could not get Addon Secret: %v", err)
 	}
 
-	manifest := vault.Data["enterprise.yaml"]
+	manifest := vault.Data["starburstenterprise.yaml"]
 	if manifest == nil {
 		return ctrl.Result{}, fmt.Errorf("could not get value %v from Addon Secret", "enterprise.yaml")
 	}
@@ -220,7 +220,7 @@ func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		Namespace: addon.Namespace,
 	}, fedServiceMonitor); err != nil && k8serrors.IsNotFound(err) {
 		logger.Info("Federation Service Monitor not found. Creating...")
-		fedServiceMonitor = r.DeployFederationServiceMonitor(fedServiceMonitorName, addon.Namespace, string(vault.Data["metrics"]))
+		fedServiceMonitor = r.DeployFederationServiceMonitor(fedServiceMonitorName, addon.Namespace, string(vault.Data["metrics.yaml"]))
 		if err := r.Client.Create(ctx, fedServiceMonitor); err != nil {
 			logger.Error(err, "Could not create Federation Service Monitor")
 			return ctrl.Result{Requeue: true}, fmt.Errorf("could not create federation service monitor: %v", err)
@@ -236,7 +236,7 @@ func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		Namespace: addon.Namespace,
 	}, prometheusRule); err != nil && k8serrors.IsNotFound(err) {
 		logger.Info("Prometheus Rules not found. Creating...")
-		prometheusRule, err = r.DeployPrometheusRules(prometheusRuleName, addon.Namespace, vault.Data["rules"])
+		prometheusRule, err = r.DeployPrometheusRules(prometheusRuleName, addon.Namespace, vault.Data["rules.yaml"])
 		if err != nil {
 			logger.Error(err, "could not create prometheus rules")
 			return ctrl.Result{Requeue: true}, err
