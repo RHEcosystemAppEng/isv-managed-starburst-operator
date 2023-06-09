@@ -502,7 +502,7 @@ func (r *StarburstAddonReconciler) DeployPrometheus(vaultSecretName string, toke
 
 				ServiceMonitorSelector: &metav1.LabelSelector{},
 				PodMonitorSelector:     &metav1.LabelSelector{},
-				ServiceAccountName:     prometheusName,
+				ServiceAccountName:     "starburst-enterprise-helm-operator-controller-manager",
 				Resources: corev1.ResourceRequirements{
 					Requests: corev1.ResourceList{
 						corev1.ResourceMemory: resource.MustParse("400Mi"),
