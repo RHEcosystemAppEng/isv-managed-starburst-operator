@@ -3,6 +3,8 @@ package addon
 import (
 	"context"
 	"fmt"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"os"
 	"time"
 
@@ -10,13 +12,12 @@ import (
 	operatorsv1 "github.com/operator-framework/api/pkg/operators/v1"
 	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	"github.com/operator-framework/operator-lifecycle-manager/pkg/api/client/clientset/versioned/scheme"
+	promv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	v1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/pointer"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -58,40 +59,8 @@ var _ = Describe("StarburstAddon Reconcile", Ordered, func() {
 
 		// Check finalizer
 		It("Should add finalizers", func() {
-			f := g.GetFinalizers()
-			for _, e := range f {
-				fmt.Println("The finalizer are: ", e)
-			}
 			Expect(controllerutil.ContainsFinalizer(g, isv.CommonISVInstance.GetISVPrefix()+"addons/finalizer")).To(BeTrue())
 		})
-		//Context("NFD related tests", func() {
-		//	It("Should Have created an NFD CR and mark as owner", func() {
-		//		nfdCr := &nfdv1.NodeFeatureDiscovery{}
-		//		err := r.Client.Get(context.TODO(), types.NamespacedName{
-		//			Name:      common.GlobalConfig.NfdCrName,
-		//			Namespace: common.GlobalConfig.AddonNamespace,
-		//		}, nfdCr)
-		//		Expect(err).ShouldNot(HaveOccurred())
-		//
-		//		ownerRef := nfdCr.ObjectMeta.OwnerReferences[0]
-		//		Expect(ownerRef.UID).To(Equal(g.UID))
-		//	})
-		//	It("Should contain condition", func() {
-		//		Expect(common.ContainCondition(g.Status.Conditions, "NodeFeatureDiscoveryDeployed", "True")).To(BeTrue())
-		//	})
-		//})
-		//Context("ClusterPolicy related tests", func() {
-		//	It("Should Create gpu-operator ClusterPolicy CR", func() {
-		//		clusterPolicyCr := &gpuv1.ClusterPolicy{}
-		//		err := r.Client.Get(context.TODO(), types.NamespacedName{
-		//			Name: common.GlobalConfig.ClusterPolicyName,
-		//		}, clusterPolicyCr)
-		//		Expect(err).ShouldNot(HaveOccurred())
-		//	})
-		//	It("Should contain condition", func() {
-		//		Expect(common.ContainCondition(g.Status.Conditions, "ClusterPolicyDeployed", "True")).To(BeTrue())
-		//	})
-		//})
 	})
 
 	Context("Delete reconcile", func() {
@@ -104,21 +73,19 @@ var _ = Describe("StarburstAddon Reconcile", Ordered, func() {
 			},
 		}
 
-		_, err := r.Reconcile(context.TODO(), req)
+		It("should already find the Starburst enterprise CR deleted", func() {
+			_, err := r.Reconcile(context.TODO(), req)
 
-		It("should return an error", func() {
-			Expect(err).Should(HaveOccurred())
-			Expect(err.Error()).Should(ContainSubstring("not all resources have been deleted"))
-		})
+			Expect(err).Should(Not(HaveOccurred()))
 
-		It("should delete the StarburstAddon CSV", func() {
-			g := &operatorsv1alpha1.ClusterServiceVersion{}
-			crName := isv.CommonISVInstance.GetAddonCRName()
-			crNamespace := isv.CommonISVInstance.GetAddonCRNamespace()
-			err := r.Client.Get(context.TODO(), types.NamespacedName{
-				Name:      crName,
-				Namespace: crNamespace,
-			}, g)
+			enterprise := &unstructured.Unstructured{}
+			enterprise.SetKind("StarburstEnterprise")
+			enterprise.SetAPIVersion("charts.starburstdata.com/v1alpha1")
+
+			err = r.Client.Get(context.TODO(), types.NamespacedName{
+				Name:      buildEnterpriseName(req.Name),
+				Namespace: isv.CommonISVInstance.GetAddonCRNamespace(),
+			}, enterprise)
 			Expect(err).Should(HaveOccurred())
 			Expect(k8serrors.IsNotFound(err)).To(BeTrue())
 		})
@@ -129,39 +96,9 @@ var _ = Describe("StarburstAddon Reconcile", Ordered, func() {
 			Expect(k8serrors.IsNotFound(err)).To(BeTrue())
 		})
 
-		//It("should delete the ClusterPolicy CR", func() {
-		//	cp := &gpuv1.ClusterPolicy{}
-		//	err := r.Get(context.TODO(), client.ObjectKey{
-		//		Name: common.GlobalConfig.ClusterPolicyName,
-		//	}, cp)
-		//	Expect(err).Should(HaveOccurred())
-		//	Expect(k8serrors.IsNotFound(err)).To(BeTrue())
-		//})
-
-		It("should delete the Subscription CR", func() {
-			s := &operatorsv1alpha1.Subscription{}
-			err := r.Get(context.TODO(), client.ObjectKey{
-				Name:      "starburst-addon-subscription",
-				Namespace: starburstAddon.Namespace,
-			}, s)
-			Expect(err).Should(HaveOccurred())
-			Expect(k8serrors.IsNotFound(err)).To(BeTrue())
-		})
-
-		//It("should delete the NFD CR", func() {
-		//	nfd := &nfdv1.NodeFeatureDiscovery{}
-		//	err := r.Get(context.TODO(), types.NamespacedName{
-		//		Name:      common.GlobalConfig.NfdCrName,
-		//		Namespace: starburstAddon.Namespace,
-		//	}, nfd)
-		//	Expect(err).Should(HaveOccurred())
-		//	Expect(k8serrors.IsNotFound(err)).To(BeTrue())
-		//})
-
 		Context("a second time", func() {
-			_, err := r.Reconcile(context.TODO(), req)
-
 			It("should not return an error", func() {
+				_, err := r.Reconcile(context.TODO(), req)
 				Expect(err).ShouldNot(HaveOccurred())
 			})
 		})
@@ -170,23 +107,73 @@ var _ = Describe("StarburstAddon Reconcile", Ordered, func() {
 
 func prepareClusterForStarburstAddonCreateTest() (*v1alpha1.StarburstAddon, *StarburstAddonReconciler) {
 	starburstAddon := &v1alpha1.StarburstAddon{}
-	starburstAddon.Name = "TestAddon"
+	crName := isv.CommonISVInstance.GetAddonCRName()
+	starburstAddon.Name = crName
 	crNamespace := isv.CommonISVInstance.GetAddonCRNamespace()
 	starburstAddon.Namespace = crNamespace
 	starburstAddon.APIVersion = "v1alpha1"
 	starburstAddon.UID = types.UID("uid-uid")
 	starburstAddon.Kind = "StarburstAddon"
 
-	starburstLicense := &v1.Secret{
+	addonParamsSecret, vaultSecret := createSecretObjs(crNamespace)
+
+	p, sm, fm, promRules, enterprise := createAdditionalObjs(crName, crNamespace)
+
+	r := newTestStarburstAddonReconciler(starburstAddon, addonParamsSecret, vaultSecret, p, sm, fm, promRules, &enterprise)
+
+	return starburstAddon, r
+}
+
+func createAdditionalObjs(crName string, crNamespace string) (*promv1.Prometheus, *promv1.ServiceMonitor, *promv1.ServiceMonitor, *promv1.PrometheusRule, unstructured.Unstructured) {
+	p := &promv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "starburst-license",
+			Name:      crName + "-prometheus",
+			Namespace: crNamespace,
+		}}
+
+	sm := &promv1.ServiceMonitor{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      crName + "-servicemonitor",
+			Namespace: crNamespace,
+		}}
+
+	fm := &promv1.ServiceMonitor{}
+	fm.APIVersion = "monitoring.coreos.com/v1"
+	fm.Kind = "ServiceMonitor"
+	fm.Name = crName + "-federation"
+	fm.Namespace = crNamespace
+
+	promRules := &promv1.PrometheusRule{}
+	promRules.APIVersion = "monitoring.coreos.com/v1"
+	promRules.Kind = "PrometheusRule"
+	promRules.Name = crName + "-rules"
+	promRules.Namespace = crNamespace
+
+	enterprise := createBasicUnstructureEnterpriseObj(crName, crNamespace)
+
+	return p, sm, fm, promRules, enterprise
+}
+
+func createBasicUnstructureEnterpriseObj(crName string, crNamespace string) unstructured.Unstructured {
+	enterprise := unstructured.Unstructured{}
+	enterprise.SetName(buildEnterpriseName(crName))
+	enterprise.SetNamespace(crNamespace)
+	enterprise.SetGroupVersionKind(schema.GroupVersionKind{Kind: "StarburstEnterprise", Version: "v1alpha1", Group: "charts.starburstdata.com"})
+	return enterprise
+}
+
+func createSecretObjs(crNamespace string) (*v1.Secret, *v1.Secret) {
+	addonParamsSecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "addon-managed-starburst-parameters",
 			Namespace: crNamespace,
 		},
 		Data: map[string][]byte{
-			"starburstdata.license": []byte("dummyLicense"),
+			"starburst-license": []byte("dummyLicense"),
 		},
 	}
 
+	//Hack because fake client has issues with unstructured data (so we make sure that the enterprise CR wont be created/updated
 	f, err := os.ReadFile("../../test-resources/enterprise.yaml") // just pass the file name
 	if err != nil {
 		fmt.Print(err)
@@ -198,7 +185,7 @@ func prepareClusterForStarburstAddonCreateTest() (*v1alpha1.StarburstAddon, *Sta
 			Namespace: crNamespace,
 		},
 		Data: map[string][]byte{
-			"enterprise":       f,
+			"enterprise.yaml":  f,
 			"token-url":        []byte("dummyTokenURL"),
 			"remote-write-url": []byte("dummyRemoteWriteURL"),
 			"regex":            []byte("dummyRegex"),
@@ -206,65 +193,25 @@ func prepareClusterForStarburstAddonCreateTest() (*v1alpha1.StarburstAddon, *Sta
 			"rules":            []byte("dummyRules"),
 		},
 	}
-
-	r := newTestStarburstAddonReconciler(starburstAddon, starburstLicense, vaultSecret)
-
-	return starburstAddon, r
+	return addonParamsSecret, vaultSecret
 }
 
 func prepareClusterForStarburstAddonDeletionTest() (*v1alpha1.StarburstAddon, *StarburstAddonReconciler) {
 	starburstAddon := &v1alpha1.StarburstAddon{}
-	starburstAddon.Name = "TestAddon"
-	crNamespace := isv.CommonISVInstance.GetAddonCRNamespace()
 	crName := isv.CommonISVInstance.GetAddonCRName()
+	starburstAddon.Name = crName
+	crNamespace := isv.CommonISVInstance.GetAddonCRNamespace()
 	starburstAddon.Namespace = crNamespace
 	starburstAddon.UID = types.UID("uid-uid")
 	starburstAddon.Finalizers = []string{isv.CommonISVInstance.GetISVPrefix() + "addons/finalizer"}
 	now := metav1.NewTime(time.Now())
 	starburstAddon.ObjectMeta.DeletionTimestamp = &now
 
-	kind := "StarburstAddon"
-	gvk := v1alpha1.GroupVersion.WithKind(kind)
+	addonParamsSecret, vaultSecret := createSecretObjs(crNamespace)
 
-	// This addon's CSV
-	starburstAddonCsv := NewCsv(crNamespace, crName, "")
+	p, sm, fm, promRules, enterprise := createAdditionalObjs(crName, crNamespace)
 
-	ownerRef := metav1.OwnerReference{
-		APIVersion:         gvk.GroupVersion().String(),
-		Kind:               gvk.Kind,
-		Name:               starburstAddon.Name,
-		UID:                starburstAddon.UID,
-		BlockOwnerDeletion: pointer.BoolPtr(true),
-		Controller:         pointer.BoolPtr(true),
-	}
-
-	//// NFD
-	//nfd := &nfdv1.NodeFeatureDiscovery{
-	//	ObjectMeta: metav1.ObjectMeta{
-	//		Name:            common.GlobalConfig.NfdCrName,
-	//		Namespace:       starburstAddon.Namespace,
-	//		OwnerReferences: []metav1.OwnerReference{ownerRef},
-	//	},
-	//}
-	//
-	//// ClusterPolicy
-	//clusterPolicy := &gpuv1.ClusterPolicy{
-	//	ObjectMeta: metav1.ObjectMeta{
-	//		Name:            common.GlobalConfig.ClusterPolicyName,
-	//		OwnerReferences: []metav1.OwnerReference{ownerRef},
-	//	},
-	//}
-
-	// Subscription
-	subscription := &operatorsv1alpha1.Subscription{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:            "starburst-addon-subscription",
-			Namespace:       starburstAddon.Namespace,
-			OwnerReferences: []metav1.OwnerReference{ownerRef},
-		},
-	}
-
-	r := newTestStarburstAddonReconciler(starburstAddon, starburstAddonCsv, subscription)
+	r := newTestStarburstAddonReconciler(starburstAddon, addonParamsSecret, vaultSecret, p, sm, fm, promRules, &enterprise)
 
 	return starburstAddon, r
 }
@@ -276,26 +223,8 @@ func newTestStarburstAddonReconciler(objs ...runtime.Object) *StarburstAddonReco
 	Expect(operatorsv1.AddToScheme(s)).ShouldNot(HaveOccurred())
 	Expect(v1.AddToScheme(s)).ShouldNot(HaveOccurred())
 	Expect(v1alpha1.AddToScheme(s)).ShouldNot(HaveOccurred())
-	//Expect(gpuv1.AddToScheme(s)).ShouldNot(HaveOccurred())
-	//Expect(nfdv1.AddToScheme(s)).ShouldNot(HaveOccurred())
+	Expect(promv1.AddToScheme(s)).ShouldNot(HaveOccurred())
 	Expect(configv1.AddToScheme(s)).ShouldNot(HaveOccurred())
-	//Expect(appsv1.AddToScheme(s)).ShouldNot(HaveOccurred())
-
-	clusterVersion := &configv1.ClusterVersion{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "version",
-		},
-		Status: configv1.ClusterVersionStatus{
-			History: []configv1.UpdateHistory{
-				{
-					State:   configv1.CompletedUpdate,
-					Version: "4.9.7",
-				},
-			},
-		},
-	}
-
-	objs = append(objs, clusterVersion)
 
 	starburstOperatorCsv := &operatorsv1alpha1.ClusterServiceVersion{
 		ObjectMeta: metav1.ObjectMeta{
@@ -314,14 +243,4 @@ func newTestStarburstAddonReconciler(objs ...runtime.Object) *StarburstAddonReco
 		Client: c,
 		Scheme: s,
 	}
-}
-
-func NewCsv(namespace string, name string, almExample string) *operatorsv1alpha1.ClusterServiceVersion {
-	csv := &operatorsv1alpha1.ClusterServiceVersion{}
-	csv.Name = name
-	csv.Namespace = namespace
-	csv.ObjectMeta.Annotations = map[string]string{
-		"alm-examples": almExample,
-	}
-	return csv
 }

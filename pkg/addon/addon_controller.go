@@ -65,7 +65,6 @@ func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	logger := log.FromContext(ctx)
 
 	fmt.Println("Start reconcile loop!!!")
-	fmt.Println("The r.Client is : ", r.Client)
 	// fetch subject addon
 	addon := &v1alpha1.StarburstAddon{}
 	if err := r.Client.Get(ctx, types.NamespacedName{
@@ -89,7 +88,6 @@ func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		Name:      isv.CommonISVInstance.GetISVPrefix() + "-addon",
 		Namespace: req.Namespace,
 	}, vault); err != nil {
-		fmt.Println("Vault secret error :", err)
 		if k8serrors.IsNotFound(err) {
 			logger.Info("Addon Secret not found.")
 			return ctrl.Result{Requeue: true}, err
@@ -98,14 +96,11 @@ func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		return ctrl.Result{}, fmt.Errorf("could not get Addon Secret: %v", err)
 	}
 
-	fmt.Println("Fetch starburst CR !!!")
-
 	manifest := vault.Data["enterprise.yaml"]
 	if manifest == nil {
 		return ctrl.Result{}, fmt.Errorf("could not get value %v from Addon Secret", "enterprise.yaml")
 	}
 
-	fmt.Println("Start build enterprise resource!!!")
 	// build enterprise resource from file propagated by a secret created for the vault keys
 	desiredEnterprise, err := r.buildEnterpriseResource(ctx, addon, req.Namespace, manifest)
 	if err != nil {
@@ -115,14 +110,13 @@ func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 
 	finalizerName := isv.CommonISVInstance.GetISVPrefix() + "addons/finalizer"
 
-	fmt.Println("Check if object deleted!!!")
 	// cleanup for deletion
 	if !addon.ObjectMeta.DeletionTimestamp.IsZero() {
 		// object is currently being deleted
 		if controllerutil.ContainsFinalizer(addon, finalizerName) {
 			// finalizer exists, delete child enterprise
 			enterpriseDelete := &unstructured.Unstructured{}
-			enterpriseDelete.SetGroupVersionKind(desiredEnterprise.GetObjectKind().GroupVersionKind())
+			enterpriseDelete.SetGroupVersionKind(desiredEnterprise.GroupVersionKind())
 
 			if err := r.Client.Get(
 				ctx,
@@ -158,10 +152,11 @@ func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	// object is NOT currently being deleted, add finalizer
 	if !controllerutil.ContainsFinalizer(addon, finalizerName) {
 		controllerutil.AddFinalizer(addon, finalizerName)
-	}
-	if err := r.Client.Update(ctx, addon); err != nil {
-		logger.Error(err, "failed to set finalizer for new addon")
-		return ctrl.Result{}, err
+
+		if err := r.Client.Update(ctx, addon); err != nil {
+			logger.Error(err, "failed to set finalizer for new addon")
+			return ctrl.Result{}, err
+		}
 	}
 
 	// Fetch clusterversion instance
@@ -267,7 +262,7 @@ func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	current.SetGroupVersionKind(desiredEnterprise.GroupVersionKind())
 
 	// fetch the existing enterprise resource
-	if err := r.Client.Get(ctx, req.NamespacedName, current); err != nil {
+	if err := r.Client.Get(ctx, client.ObjectKeyFromObject(&desiredEnterprise), current); err != nil {
 		if k8serrors.IsNotFound(err) {
 			// if current enterprise not found, create a new one
 			if err := r.Client.Create(ctx, &desiredEnterprise); err != nil {
@@ -292,7 +287,8 @@ func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	}
 
 	// reconcile back to desired if current was changed
-	if !equality.Semantic.DeepDerivative(desiredEnterprise, current) {
+	setDesiredEnterpriseCRBasicFields(desiredEnterprise, current)
+	if !equality.Semantic.DeepDerivative(&desiredEnterprise, current) {
 		// NOTE equality should be based on business logic
 		if err := r.Client.Update(ctx, &desiredEnterprise); err != nil {
 			logger.Error(err, "failed reconciling enterprise cr, requeuing")
@@ -303,11 +299,17 @@ func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	return ctrl.Result{}, nil
 }
 
+func setDesiredEnterpriseCRBasicFields(desiredEnterprise unstructured.Unstructured, current *unstructured.Unstructured) {
+	desiredEnterprise.SetCreationTimestamp(current.GetCreationTimestamp())
+	desiredEnterprise.SetResourceVersion(current.GetResourceVersion())
+	desiredEnterprise.SetSelfLink(current.GetSelfLink())
+	desiredEnterprise.SetUID(current.GetUID())
+}
+
 // sets up the controller with the manager
 func (r *StarburstAddonReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.StarburstAddon{}).
-		//Owns(&configv1.ClusterVersion{}).
 		Complete(r)
 }
 
@@ -510,7 +512,7 @@ func (r *StarburstAddonReconciler) DeployPrometheus(vaultSecretName string, toke
 
 				ServiceMonitorSelector: &metav1.LabelSelector{},
 				PodMonitorSelector:     &metav1.LabelSelector{},
-				ServiceAccountName:     prometheusName,
+				ServiceAccountName:     "starburst-enterprise-helm-operator-controller-manager",
 				Resources: corev1.ResourceRequirements{
 					Requests: corev1.ResourceList{
 						corev1.ResourceMemory: resource.MustParse("400Mi"),
