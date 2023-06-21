@@ -16,4 +16,8 @@ resources:
   kind: StarburstAddon
   path: github.com/RHEcosystemAppEng/isv-managed-starburst-operator/api/v1alpha1
   version: v1alpha1
+- controller: true
+  domain: isv.managed
+  kind: ConfigMap
+  version: v1
 version: "3"

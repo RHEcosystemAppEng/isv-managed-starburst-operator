@@ -23,6 +23,7 @@ import (
 	"github.com/isv-managed-starburst-operator/pkg/isv"
 	"github.com/mitchellh/mapstructure"
 	configv1 "github.com/openshift/api/config/v1"
+	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	promv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"gopkg.in/yaml.v3"
 	corev1 "k8s.io/api/core/v1"
@@ -32,6 +33,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"reflect"
@@ -136,6 +138,10 @@ func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 					logger.Error(err, "failed deleting enterprise cr")
 					return ctrl.Result{}, err
 				}
+			}
+
+			if err := r.removeSelfCsv(ctx); err != nil {
+				return ctrl.Result{}, err
 			}
 
 			// deletion done, remove finalizer
@@ -306,7 +312,7 @@ func setDesiredEnterpriseCRBasicFields(desiredEnterprise unstructured.Unstructur
 	desiredEnterprise.SetUID(current.GetUID())
 }
 
-// sets up the controller with the manager
+// SetupWithManager sets up the controller with the manager
 func (r *StarburstAddonReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.StarburstAddon{}).
@@ -388,7 +394,7 @@ func (r *StarburstAddonReconciler) DeployPrometheusRules(prometheusRuleName stri
 	promRules.Kind = "PrometheusRule"
 	promRules.Name = prometheusRuleName
 	promRules.Namespace = prometheusRuleNamespace
-	promRules.Spec = *&promv1.PrometheusRuleSpec{
+	promRules.Spec = promv1.PrometheusRuleSpec{
 		Groups: []promv1.RuleGroup{
 			{
 				Name:  isv.CommonISVInstance.GetISVPrefix() + "_alert_rules",
@@ -421,7 +427,7 @@ func (r *StarburstAddonReconciler) DeployFederationServiceMonitor(fedServiceMoni
 	fedServiceMonitor.Kind = "ServiceMonitor"
 	fedServiceMonitor.Name = fedServiceMonitorName
 	fedServiceMonitor.Namespace = fedServiceMonitorNamespace
-	fedServiceMonitor.Spec = *&promv1.ServiceMonitorSpec{
+	fedServiceMonitor.Spec = promv1.ServiceMonitorSpec{
 		JobLabel: "openshift-monitoring-federation",
 		NamespaceSelector: promv1.NamespaceSelector{
 			MatchNames: []string{
@@ -532,4 +538,39 @@ func fetchClusterID(cv *configv1.ClusterVersion) string {
 	//return "1v529ivvikohbpg8pgfihegcdjhudjng"
 	clusterID := cv.Spec.ClusterID
 	return string(clusterID)
+}
+
+func (r *StarburstAddonReconciler) removeSelfCsv(ctx context.Context) error {
+	logger := log.FromContext(ctx).WithValues("Reconcile Step", "Addon CSV Deletion")
+	logger.Info("Cleanup Reconcile | Delete own CSV")
+
+	addonCsv, err := getCsvWithPrefix(r.Client, isv.CommonISVInstance.GetAddonCRNamespace(), "isv-starburst-operator")
+	if err != nil {
+		return err
+	}
+
+	err = r.Delete(ctx, addonCsv)
+	if err != nil && !k8serrors.IsNotFound(err) {
+		return fmt.Errorf("failed to delete StarburstAddon Operator CSV %s: %w", addonCsv.Name, err)
+	}
+
+	return nil
+}
+
+func getCsvWithPrefix(c client.Client, namespace string, prefix string) (*operatorsv1alpha1.ClusterServiceVersion, error) {
+
+	csvs := operatorsv1alpha1.ClusterServiceVersionList{}
+	err := c.List(context.TODO(), &csvs, &client.ListOptions{
+		Namespace: namespace,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, csv := range csvs.Items {
+		if strings.HasPrefix(csv.Name, prefix) {
+			return &csv, nil
+		}
+	}
+	return nil, k8serrors.NewNotFound(schema.ParseGroupResource(""), fmt.Sprintf("%v/%v*", namespace, prefix))
 }
