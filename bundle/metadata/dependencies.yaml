@@ -5,5 +5,5 @@ dependencies:
     version: "402.1.0"
 - type: olm.package
   value:
-    packageName: rhods-prometheus-operator
+    packageName: ose-prometheus-operator
     version: "4.10.0"
