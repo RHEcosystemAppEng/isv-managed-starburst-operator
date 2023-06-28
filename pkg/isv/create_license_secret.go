@@ -13,7 +13,7 @@ import (
 func applyStarburstLicense(ctx context.Context, cl client.Client, ns string) error {
 	// load secret containing addon parameters
 	addonParamsKey := types.NamespacedName{
-		Name:      "addon-managed-starburst-parameters",
+		Name:      "addon-isv-starburst-operator-parameters",
 		Namespace: ns,
 	}
 
@@ -55,7 +55,7 @@ func applyStarburstTileParameters(ctx context.Context, cl client.Client, ns stri
 
 	// load secret containing addon parameters
 	addonParamsKey := types.NamespacedName{
-		Name:      "addon-managed-starburst-parameters",
+		Name:      "addon-isv-starburst-operator-parameters",
 		Namespace: ns,
 	}
 
@@ -202,7 +202,7 @@ func (starburst *Starburst) GetAddonCRName() string {
 }
 
 func (starburst *Starburst) GetAddonCRNamespace() string {
-	return "redhat-starburst-operator"
+	return "redhat-starburst-op"
 }
 
 func init() {
