@@ -146,28 +146,10 @@ func replaceCpuInTag(tag string, cpuVal int, specMap map[string]interface{}) {
 			if ok {
 				resourcesMap, ok := resources.(map[string]interface{})
 				if ok {
-					limits, ok := resourcesMap["limits"]
-					if ok {
-						limitsMap, ok := limits.(map[string]interface{})
-						if ok {
-							_, ok := limitsMap["cpu"]
-							if ok {
-								limitsMap["cpu"] = cpuVal
-							}
-						}
-					}
-
-					requests, ok := resourcesMap["requests"]
-					if ok {
-						requestsMap, ok := requests.(map[string]interface{})
-						if ok {
-							requestsMap["cpu"] = cpuVal
-						}
-					}
+					resourcesMap["cpu"] = cpuVal
 				}
 			} else {
-				tagMap["resources"] = map[string]interface{}{"limits": map[string]interface{}{"cpu": cpuVal},
-					"requests": map[string]interface{}{"cpu": cpuVal}}
+				tagMap["resources"] = map[string]interface{}{"cpu": cpuVal}
 			}
 		}
 	}

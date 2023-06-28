@@ -23,6 +23,7 @@ import (
 	"github.com/isv-managed-starburst-operator/pkg/isv"
 	"github.com/mitchellh/mapstructure"
 	configv1 "github.com/openshift/api/config/v1"
+	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	promv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"gopkg.in/yaml.v3"
 	corev1 "k8s.io/api/core/v1"
@@ -32,6 +33,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"reflect"
@@ -64,6 +66,7 @@ type StarburstAddonReconciler struct {
 func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
+	fmt.Println("Start reconcile loop!!!")
 	// fetch subject addon
 	addon := &v1alpha1.StarburstAddon{}
 	if err := r.Client.Get(ctx, types.NamespacedName{
@@ -79,13 +82,14 @@ func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		return ctrl.Result{}, err
 	}
 
+	fmt.Println("Fetch vault secret!!!")
+
 	// Secret
 	vault := &corev1.Secret{}
 	if err := r.Client.Get(ctx, types.NamespacedName{
 		Name:      "addon",
 		Namespace: req.Namespace,
 	}, vault); err != nil {
-
 		if k8serrors.IsNotFound(err) {
 			logger.Info("Addon Secret not found.")
 			return ctrl.Result{Requeue: true}, err
@@ -114,7 +118,7 @@ func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		if controllerutil.ContainsFinalizer(addon, finalizerName) {
 			// finalizer exists, delete child enterprise
 			enterpriseDelete := &unstructured.Unstructured{}
-			enterpriseDelete.SetGroupVersionKind(desiredEnterprise.GetObjectKind().GroupVersionKind())
+			enterpriseDelete.SetGroupVersionKind(desiredEnterprise.GroupVersionKind())
 
 			if err := r.Client.Get(
 				ctx,
@@ -136,6 +140,10 @@ func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 				}
 			}
 
+			if err := r.removeSelfCsv(ctx); err != nil {
+				return ctrl.Result{}, err
+			}
+
 			// deletion done, remove finalizer
 			controllerutil.RemoveFinalizer(addon, finalizerName)
 			if err := r.Client.Update(ctx, addon); err != nil {
@@ -150,10 +158,11 @@ func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	// object is NOT currently being deleted, add finalizer
 	if !controllerutil.ContainsFinalizer(addon, finalizerName) {
 		controllerutil.AddFinalizer(addon, finalizerName)
-	}
-	if err := r.Client.Update(ctx, addon); err != nil {
-		logger.Error(err, "failed to set finalizer for new addon")
-		return ctrl.Result{}, err
+
+		if err := r.Client.Update(ctx, addon); err != nil {
+			logger.Error(err, "failed to set finalizer for new addon")
+			return ctrl.Result{}, err
+		}
 	}
 
 	// Fetch clusterversion instance
@@ -259,7 +268,7 @@ func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	current.SetGroupVersionKind(desiredEnterprise.GroupVersionKind())
 
 	// fetch the existing enterprise resource
-	if err := r.Client.Get(ctx, req.NamespacedName, current); err != nil {
+	if err := r.Client.Get(ctx, client.ObjectKeyFromObject(&desiredEnterprise), current); err != nil {
 		if k8serrors.IsNotFound(err) {
 			// if current enterprise not found, create a new one
 			if err := r.Client.Create(ctx, &desiredEnterprise); err != nil {
@@ -284,7 +293,8 @@ func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	}
 
 	// reconcile back to desired if current was changed
-	if !equality.Semantic.DeepDerivative(desiredEnterprise, current) {
+	setDesiredEnterpriseCRBasicFields(desiredEnterprise, current)
+	if !equality.Semantic.DeepDerivative(&desiredEnterprise, current) {
 		// NOTE equality should be based on business logic
 		if err := r.Client.Update(ctx, &desiredEnterprise); err != nil {
 			logger.Error(err, "failed reconciling enterprise cr, requeuing")
@@ -295,11 +305,17 @@ func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	return ctrl.Result{}, nil
 }
 
-// sets up the controller with the manager
+func setDesiredEnterpriseCRBasicFields(desiredEnterprise unstructured.Unstructured, current *unstructured.Unstructured) {
+	desiredEnterprise.SetCreationTimestamp(current.GetCreationTimestamp())
+	desiredEnterprise.SetResourceVersion(current.GetResourceVersion())
+	desiredEnterprise.SetSelfLink(current.GetSelfLink())
+	desiredEnterprise.SetUID(current.GetUID())
+}
+
+// SetupWithManager sets up the controller with the manager
 func (r *StarburstAddonReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.StarburstAddon{}).
-		//Owns(&configv1.ClusterVersion{}).
 		Complete(r)
 }
 
@@ -378,7 +394,7 @@ func (r *StarburstAddonReconciler) DeployPrometheusRules(prometheusRuleName stri
 	promRules.Kind = "PrometheusRule"
 	promRules.Name = prometheusRuleName
 	promRules.Namespace = prometheusRuleNamespace
-	promRules.Spec = *&promv1.PrometheusRuleSpec{
+	promRules.Spec = promv1.PrometheusRuleSpec{
 		Groups: []promv1.RuleGroup{
 			{
 				Name:  isv.CommonISVInstance.GetISVPrefix() + "_alert_rules",
@@ -411,7 +427,7 @@ func (r *StarburstAddonReconciler) DeployFederationServiceMonitor(fedServiceMoni
 	fedServiceMonitor.Kind = "ServiceMonitor"
 	fedServiceMonitor.Name = fedServiceMonitorName
 	fedServiceMonitor.Namespace = fedServiceMonitorNamespace
-	fedServiceMonitor.Spec = *&promv1.ServiceMonitorSpec{
+	fedServiceMonitor.Spec = promv1.ServiceMonitorSpec{
 		JobLabel: "openshift-monitoring-federation",
 		NamespaceSelector: promv1.NamespaceSelector{
 			MatchNames: []string{
@@ -522,4 +538,39 @@ func fetchClusterID(cv *configv1.ClusterVersion) string {
 	//return "1v529ivvikohbpg8pgfihegcdjhudjng"
 	clusterID := cv.Spec.ClusterID
 	return string(clusterID)
+}
+
+func (r *StarburstAddonReconciler) removeSelfCsv(ctx context.Context) error {
+	logger := log.FromContext(ctx).WithValues("Reconcile Step", "Addon CSV Deletion")
+	logger.Info("Cleanup Reconcile | Delete own CSV")
+
+	addonCsv, err := getCsvWithPrefix(r.Client, isv.CommonISVInstance.GetAddonCRNamespace(), "isv-starburst-operator")
+	if err != nil {
+		return err
+	}
+
+	err = r.Delete(ctx, addonCsv)
+	if err != nil && !k8serrors.IsNotFound(err) {
+		return fmt.Errorf("failed to delete StarburstAddon Operator CSV %s: %w", addonCsv.Name, err)
+	}
+
+	return nil
+}
+
+func getCsvWithPrefix(c client.Client, namespace string, prefix string) (*operatorsv1alpha1.ClusterServiceVersion, error) {
+
+	csvs := operatorsv1alpha1.ClusterServiceVersionList{}
+	err := c.List(context.TODO(), &csvs, &client.ListOptions{
+		Namespace: namespace,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, csv := range csvs.Items {
+		if strings.HasPrefix(csv.Name, prefix) {
+			return &csv, nil
+		}
+	}
+	return nil, k8serrors.NewNotFound(schema.ParseGroupResource(""), fmt.Sprintf("%v/%v*", namespace, prefix))
 }

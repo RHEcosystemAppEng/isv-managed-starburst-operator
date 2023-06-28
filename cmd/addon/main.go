@@ -20,6 +20,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/isv-managed-starburst-operator/pkg/configmap"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -78,6 +79,7 @@ func main() {
 		Scheme:                 scheme,
 		MetricsBindAddress:     addon.Flags.MetricsAddr,
 		Port:                   9443,
+		Namespace:              isv.CommonISVInstance.GetAddonCRNamespace(),
 		HealthProbeBindAddress: addon.Flags.ProbeAddr,
 		LeaderElection:         addon.Flags.EnableLeaderElection,
 		LeaderElectionID:       "2827ef65.isv.managed",
@@ -95,6 +97,15 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "StarburstAddon")
 		os.Exit(1)
 	}
+
+	if err = (&configmap.ConfigMapReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ConfigMap")
+		os.Exit(1)
+	}
+
 	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
