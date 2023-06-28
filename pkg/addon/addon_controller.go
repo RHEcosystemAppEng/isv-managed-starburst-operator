@@ -82,8 +82,6 @@ func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		return ctrl.Result{}, err
 	}
 
-	fmt.Println("Fetch vault secret!!!")
-
 	// Secret
 	vault := &corev1.Secret{}
 	if err := r.Client.Get(ctx, types.NamespacedName{
