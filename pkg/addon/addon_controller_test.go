@@ -165,7 +165,7 @@ func createBasicUnstructureEnterpriseObj(crName string, crNamespace string) unst
 func createSecretObjs(crNamespace string) (*v1.Secret, *v1.Secret) {
 	addonParamsSecret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "addon-managed-starburst-parameters",
+			Name:      "addon-isv-starburst-operator-parameters",
 			Namespace: crNamespace,
 		},
 		Data: map[string][]byte{
@@ -181,16 +181,16 @@ func createSecretObjs(crNamespace string) (*v1.Secret, *v1.Secret) {
 
 	vaultSecret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      isv.CommonISVInstance.GetISVPrefix() + "-addon",
+			Name:      "addon",
 			Namespace: crNamespace,
 		},
 		Data: map[string][]byte{
-			"enterprise.yaml":  f,
-			"token-url":        []byte("dummyTokenURL"),
-			"remote-write-url": []byte("dummyRemoteWriteURL"),
-			"regex":            []byte("dummyRegex"),
-			"metrics":          []byte("dummyMetrics"),
-			"rules":            []byte("dummyRules"),
+			"starburstenterprise.yaml": f,
+			"token-url":                []byte("dummyTokenURL"),
+			"remote-write-url":         []byte("dummyRemoteWriteURL"),
+			"regex":                    []byte("dummyRegex"),
+			"metrics":                  []byte("dummyMetrics"),
+			"rules":                    []byte("dummyRules"),
 		},
 	}
 	return addonParamsSecret, vaultSecret
@@ -225,6 +225,14 @@ func newTestStarburstAddonReconciler(objs ...runtime.Object) *StarburstAddonReco
 	Expect(v1alpha1.AddToScheme(s)).ShouldNot(HaveOccurred())
 	Expect(promv1.AddToScheme(s)).ShouldNot(HaveOccurred())
 	Expect(configv1.AddToScheme(s)).ShouldNot(HaveOccurred())
+
+	clusterVersion := &configv1.ClusterVersion{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "version",
+		},
+	}
+
+	objs = append(objs, clusterVersion)
 
 	starburstOperatorCsv := &operatorsv1alpha1.ClusterServiceVersion{
 		ObjectMeta: metav1.ObjectMeta{
