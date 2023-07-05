@@ -218,21 +218,21 @@ func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		}
 	}
 
-	fedServiceMonitorName := addon.Name + "-federation"
+	//fedServiceMonitorName := addon.Name + "-federation"
 
-	// Deploy Federation ServiceMonitor
-	fedServiceMonitor := &promv1.ServiceMonitor{}
-	if err := r.Client.Get(ctx, types.NamespacedName{
-		Name:      fedServiceMonitorName,
-		Namespace: addon.Namespace,
-	}, fedServiceMonitor); err != nil && k8serrors.IsNotFound(err) {
-		logger.Info("Federation Service Monitor not found. Creating...")
-		fedServiceMonitor = r.DeployFederationServiceMonitor(fedServiceMonitorName, addon.Namespace, string(vault.Data["metrics.yaml"]))
-		if err := r.Client.Create(ctx, fedServiceMonitor); err != nil {
-			logger.Error(err, "Could not create Federation Service Monitor")
-			return ctrl.Result{Requeue: true}, fmt.Errorf("could not create federation service monitor: %v", err)
-		}
-	}
+	// // Deploy Federation ServiceMonitor
+	// fedServiceMonitor := &promv1.ServiceMonitor{}
+	// if err := r.Client.Get(ctx, types.NamespacedName{
+	// 	Name:      fedServiceMonitorName,
+	// 	Namespace: addon.Namespace,
+	// }, fedServiceMonitor); err != nil && k8serrors.IsNotFound(err) {
+	// 	logger.Info("Federation Service Monitor not found. Creating...")
+	// 	fedServiceMonitor = r.DeployFederationServiceMonitor(fedServiceMonitorName, addon.Namespace, string(vault.Data["metrics.yaml"]))
+	// 	if err := r.Client.Create(ctx, fedServiceMonitor); err != nil {
+	// 		logger.Error(err, "Could not create Federation Service Monitor")
+	// 		return ctrl.Result{Requeue: true}, fmt.Errorf("could not create federation service monitor: %v", err)
+	// 	}
+	// }
 
 	prometheusRuleName := addon.Name + "-rules"
 
@@ -356,8 +356,10 @@ func (r *StarburstAddonReconciler) DeployEnterpriseServiceMonitor(serviceMonitor
 			NamespaceSelector: promv1.NamespaceSelector{
 				MatchNames: []string{serviceMonitorNamespace},
 			},
-			MatchLabels: map[string]string{
-				"app": "starburst-cr-enterprise",
+			Selector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"app": "starburst-cr-enterprise",
+				},
 			},
 			Endpoints: []promv1.Endpoint{
 				{
@@ -392,6 +394,11 @@ func (r *StarburstAddonReconciler) DeployPrometheusRules(prometheusRuleName stri
 	promRules.Kind = "PrometheusRule"
 	promRules.Name = prometheusRuleName
 	promRules.Namespace = prometheusRuleNamespace
+	promRules.ObjectMeta = metav1.ObjectMeta{
+		Labels: map[string]string{
+			"rules": "starburst-rules",
+		},
+	},
 	promRules.Spec = promv1.PrometheusRuleSpec{
 		Groups: []promv1.RuleGroup{
 			{
@@ -461,7 +468,7 @@ func ConvertToIntOrStringFunc(f reflect.Type, t reflect.Type, data interface{}) 
 
 func (r *StarburstAddonReconciler) DeployPrometheus(vaultSecretName string, tokenURL, remoteWriteURL, regex, clusterID, prometheusName, namespace string) *promv1.Prometheus {
 
-	//prometheusSelector := addon.Spec.ResourceSelector
+	prometheusSelector := "starburst-cr-rules"
 
 	return &promv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{
@@ -469,7 +476,17 @@ func (r *StarburstAddonReconciler) DeployPrometheus(vaultSecretName string, toke
 			Namespace: namespace,
 		},
 		Spec: promv1.PrometheusSpec{
-			RuleSelector: "starburst-rules",
+			RuleSelector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"rules": "starburst-rules",,
+				},
+			},
+			ServiceMonitorSelector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"app": "starburst-cr-enterprise",
+					"app.kubernetes.io/instance": "k8s"
+				},
+			},
 			CommonPrometheusFields: promv1.CommonPrometheusFields{
 				ExternalLabels: map[string]string{
 					"cluster_id": clusterID,
@@ -481,7 +498,7 @@ func (r *StarburstAddonReconciler) DeployPrometheus(vaultSecretName string, toke
 							{
 								Action: "keep",
 								Regex:  regex, //"csv_succeeded$|csv_abnormal$|cluster_version$|ALERTS$|subscription_sync_total|trino_.*$|jvm_heap_memory_used$|node_.*$|namespace_.*$|kube_.*$|cluster.*$|container_.*$",
-							    SourceLabels: []promv1.LabelName{
+								SourceLabels: []promv1.LabelName{
 									"__name__",
 								},
 							},
@@ -516,8 +533,6 @@ func (r *StarburstAddonReconciler) DeployPrometheus(vaultSecretName string, toke
 						"kubernetes.io/metadata.name": namespace,
 					},
 				},
-
-				ServiceMonitorSelector: &metav1.LabelSelector{},
 				PodMonitorSelector:     &metav1.LabelSelector{},
 				ServiceAccountName:     "starburst-enterprise-helm-operator-controller-manager",
 				Resources: corev1.ResourceRequirements{
