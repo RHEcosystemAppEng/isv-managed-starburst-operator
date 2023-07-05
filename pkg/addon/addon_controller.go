@@ -356,8 +356,8 @@ func (r *StarburstAddonReconciler) DeployEnterpriseServiceMonitor(serviceMonitor
 			NamespaceSelector: promv1.NamespaceSelector{
 				MatchNames: []string{serviceMonitorNamespace},
 			},
-			Selector: metav1.LabelSelector{
-				MatchLabels: enterprise,
+			MatchLabels: map[string]string{
+				"app": "starburst-cr-enterprise",
 			},
 			Endpoints: []promv1.Endpoint{
 				{
@@ -414,50 +414,50 @@ func ConvertToIntOrStringFunc(f reflect.Type, t reflect.Type, data interface{}) 
 	return data, nil
 }
 
-func (r *StarburstAddonReconciler) DeployFederationServiceMonitor(fedServiceMonitorName string, fedServiceMonitorNamespace string, metrics string) *promv1.ServiceMonitor {
+// func (r *StarburstAddonReconciler) DeployFederationServiceMonitor(fedServiceMonitorName string, fedServiceMonitorNamespace string, metrics string) *promv1.ServiceMonitor {
 
-	metric := make(map[string][]string)
-	metric["match[]"] = append(metric["match[]"], metrics)
+// 	metric := make(map[string][]string)
+// 	metric["match[]"] = append(metric["match[]"], metrics)
 
-	// create federated serviceMonitor
-	fedServiceMonitor := &promv1.ServiceMonitor{}
-	fedServiceMonitor.APIVersion = "monitoring.coreos.com/v1"
-	fedServiceMonitor.Kind = "ServiceMonitor"
-	fedServiceMonitor.Name = fedServiceMonitorName
-	fedServiceMonitor.Namespace = fedServiceMonitorNamespace
-	fedServiceMonitor.Spec = promv1.ServiceMonitorSpec{
-		JobLabel: "openshift-monitoring-federation",
-		NamespaceSelector: promv1.NamespaceSelector{
-			MatchNames: []string{
-				"openshift-monitoring",
-			},
-		},
-		Selector: metav1.LabelSelector{
-			MatchLabels: map[string]string{
-				"app.kubernetes.io/instance": "k8s",
-			},
-		},
-		Endpoints: []promv1.Endpoint{
-			{
-				BearerTokenFile: "/var/run/secrets/kubernetes.io/serviceaccount/token",
-				Port:            "web",
-				Path:            "/federate",
-				Interval:        "30s",
-				Scheme:          "https",
-				Params:          metric,
-				TLSConfig: &promv1.TLSConfig{
-					SafeTLSConfig: promv1.SafeTLSConfig{
-						InsecureSkipVerify: true,
-						ServerName:         "prometheus-k8s.openshift-monitoring.svc.cluster.local",
-					},
-					CAFile: "/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt",
-				},
-			},
-		},
-	}
+// 	// create federated serviceMonitor
+// 	fedServiceMonitor := &promv1.ServiceMonitor{}
+// 	fedServiceMonitor.APIVersion = "monitoring.coreos.com/v1"
+// 	fedServiceMonitor.Kind = "ServiceMonitor"
+// 	fedServiceMonitor.Name = fedServiceMonitorName
+// 	fedServiceMonitor.Namespace = fedServiceMonitorNamespace
+// 	fedServiceMonitor.Spec = promv1.ServiceMonitorSpec{
+// 		JobLabel: "openshift-monitoring-federation",
+// 		NamespaceSelector: promv1.NamespaceSelector{
+// 			MatchNames: []string{
+// 				"openshift-monitoring",
+// 			},
+// 		},
+// 		Selector: metav1.LabelSelector{
+// 			MatchLabels: map[string]string{
+// 				"app.kubernetes.io/instance": "k8s",
+// 			},
+// 		},
+// 		Endpoints: []promv1.Endpoint{
+// 			{
+// 				BearerTokenFile: "/var/run/secrets/kubernetes.io/serviceaccount/token",
+// 				Port:            "web",
+// 				Path:            "/federate",
+// 				Interval:        "30s",
+// 				Scheme:          "https",
+// 				Params:          metric,
+// 				TLSConfig: &promv1.TLSConfig{
+// 					SafeTLSConfig: promv1.SafeTLSConfig{
+// 						InsecureSkipVerify: true,
+// 						ServerName:         "prometheus-k8s.openshift-monitoring.svc.cluster.local",
+// 					},
+// 					CAFile: "/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt",
+// 				},
+// 			},
+// 		},
+// 	}
 
-	return fedServiceMonitor
-}
+// 	return fedServiceMonitor
+// }
 
 func (r *StarburstAddonReconciler) DeployPrometheus(vaultSecretName string, tokenURL, remoteWriteURL, regex, clusterID, prometheusName, namespace string) *promv1.Prometheus {
 
@@ -469,7 +469,7 @@ func (r *StarburstAddonReconciler) DeployPrometheus(vaultSecretName string, toke
 			Namespace: namespace,
 		},
 		Spec: promv1.PrometheusSpec{
-			//RuleSelector: prometheusSelector,
+			RuleSelector: "starburst-rules",
 			CommonPrometheusFields: promv1.CommonPrometheusFields{
 				ExternalLabels: map[string]string{
 					"cluster_id": clusterID,
@@ -481,6 +481,9 @@ func (r *StarburstAddonReconciler) DeployPrometheus(vaultSecretName string, toke
 							{
 								Action: "keep",
 								Regex:  regex, //"csv_succeeded$|csv_abnormal$|cluster_version$|ALERTS$|subscription_sync_total|trino_.*$|jvm_heap_memory_used$|node_.*$|namespace_.*$|kube_.*$|cluster.*$|container_.*$",
+							    SourceLabels: []promv1.LabelName{
+									"__name__",
+								},
 							},
 						},
 						URL: remoteWriteURL,
