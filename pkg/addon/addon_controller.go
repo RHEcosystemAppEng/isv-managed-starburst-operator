@@ -211,21 +211,21 @@ func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		}
 	}
 
-	fedServiceMonitorName := addon.Name + "-federation"
+	// fedServiceMonitorName := addon.Name + "-federation"
 
-	// Deploy Federation ServiceMonitor
-	fedServiceMonitor := &promv1.ServiceMonitor{}
-	if err := r.Client.Get(ctx, types.NamespacedName{
-		Name:      fedServiceMonitorName,
-		Namespace: addon.Namespace,
-	}, fedServiceMonitor); err != nil && k8serrors.IsNotFound(err) {
-		logger.Info("Federation Service Monitor not found. Creating...")
-		fedServiceMonitor = r.DeployFederationServiceMonitor(fedServiceMonitorName, addon.Namespace, string(vault.Data["metrics.yaml"]))
-		if err := r.Client.Create(ctx, fedServiceMonitor); err != nil {
-			logger.Error(err, "Could not create Federation Service Monitor")
-			return ctrl.Result{Requeue: true}, fmt.Errorf("could not create federation service monitor: %v", err)
-		}
-	}
+	// // Deploy Federation ServiceMonitor
+	// fedServiceMonitor := &promv1.ServiceMonitor{}
+	// if err := r.Client.Get(ctx, types.NamespacedName{
+	// 	Name:      fedServiceMonitorName,
+	// 	Namespace: addon.Namespace,
+	// }, fedServiceMonitor); err != nil && k8serrors.IsNotFound(err) {
+	// 	logger.Info("Federation Service Monitor not found. Creating...")
+	// 	fedServiceMonitor = r.DeployFederationServiceMonitor(fedServiceMonitorName, addon.Namespace, string(vault.Data["metrics.yaml"]))
+	// 	if err := r.Client.Create(ctx, fedServiceMonitor); err != nil {
+	// 		logger.Error(err, "Could not create Federation Service Monitor")
+	// 		return ctrl.Result{Requeue: true}, fmt.Errorf("could not create federation service monitor: %v", err)
+	// 	}
+	// }
 
 	prometheusRuleName := addon.Name + "-rules"
 
@@ -344,7 +344,7 @@ func (r *StarburstAddonReconciler) DeployEnterpriseServiceMonitor(serviceMonitor
 			},
 			Selector: metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"app": "starburst-cr-enterprise",
+					"app": "starburst-enterprise",
 				},
 			},
 			Endpoints: []promv1.Endpoint{
@@ -405,50 +405,50 @@ func ConvertToIntOrStringFunc(f reflect.Type, t reflect.Type, data interface{}) 
 	return data, nil
 }
 
-func (r *StarburstAddonReconciler) DeployFederationServiceMonitor(fedServiceMonitorName string, fedServiceMonitorNamespace string, metrics string) *promv1.ServiceMonitor {
+// func (r *StarburstAddonReconciler) DeployFederationServiceMonitor(fedServiceMonitorName string, fedServiceMonitorNamespace string, metrics string) *promv1.ServiceMonitor {
 
-	metric := make(map[string][]string)
-	metric["match[]"] = append(metric["match[]"], metrics)
+// 	metric := make(map[string][]string)
+// 	metric["match[]"] = append(metric["match[]"], metrics)
 
-	// create federated serviceMonitor
-	fedServiceMonitor := &promv1.ServiceMonitor{}
-	fedServiceMonitor.APIVersion = "monitoring.coreos.com/v1"
-	fedServiceMonitor.Kind = "ServiceMonitor"
-	fedServiceMonitor.Name = fedServiceMonitorName
-	fedServiceMonitor.Namespace = fedServiceMonitorNamespace
-	fedServiceMonitor.Spec = promv1.ServiceMonitorSpec{
-		JobLabel: "openshift-monitoring-federation",
-		NamespaceSelector: promv1.NamespaceSelector{
-			MatchNames: []string{
-				"openshift-monitoring",
-			},
-		},
-		Selector: metav1.LabelSelector{
-			MatchLabels: map[string]string{
-				"app.kubernetes.io/instance": "k8s",
-			},
-		},
-		Endpoints: []promv1.Endpoint{
-			{
-				BearerTokenFile: "/var/run/secrets/kubernetes.io/serviceaccount/token",
-				Port:            "web",
-				Path:            "/federate",
-				Interval:        "30s",
-				Scheme:          "https",
-				Params:          metric,
-				TLSConfig: &promv1.TLSConfig{
-					SafeTLSConfig: promv1.SafeTLSConfig{
-						InsecureSkipVerify: true,
-						ServerName:         "prometheus-k8s.openshift-monitoring.svc.cluster.local",
-					},
-					CAFile: "/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt",
-				},
-			},
-		},
-	}
+// 	// create federated serviceMonitor
+// 	fedServiceMonitor := &promv1.ServiceMonitor{}
+// 	fedServiceMonitor.APIVersion = "monitoring.coreos.com/v1"
+// 	fedServiceMonitor.Kind = "ServiceMonitor"
+// 	fedServiceMonitor.Name = fedServiceMonitorName
+// 	fedServiceMonitor.Namespace = fedServiceMonitorNamespace
+// 	fedServiceMonitor.Spec = promv1.ServiceMonitorSpec{
+// 		JobLabel: "openshift-monitoring-federation",
+// 		NamespaceSelector: promv1.NamespaceSelector{
+// 			MatchNames: []string{
+// 				"openshift-monitoring",
+// 			},
+// 		},
+// 		Selector: metav1.LabelSelector{
+// 			MatchLabels: map[string]string{
+// 				"app.kubernetes.io/instance": "k8s",
+// 			},
+// 		},
+// 		Endpoints: []promv1.Endpoint{
+// 			{
+// 				BearerTokenFile: "/var/run/secrets/kubernetes.io/serviceaccount/token",
+// 				Port:            "web",
+// 				Path:            "/federate",
+// 				Interval:        "30s",
+// 				Scheme:          "https",
+// 				Params:          metric,
+// 				TLSConfig: &promv1.TLSConfig{
+// 					SafeTLSConfig: promv1.SafeTLSConfig{
+// 						InsecureSkipVerify: true,
+// 						ServerName:         "prometheus-k8s.openshift-monitoring.svc.cluster.local",
+// 					},
+// 					CAFile: "/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt",
+// 				},
+// 			},
+// 		},
+// 	}
 
-	return fedServiceMonitor
-}
+// 	return fedServiceMonitor
+// }
 
 func (r *StarburstAddonReconciler) DeployPrometheus(vaultSecretName string, tokenURL, remoteWriteURL, regex, clusterID, prometheusName, namespace string) *promv1.Prometheus {
 
@@ -515,8 +515,8 @@ func (r *StarburstAddonReconciler) DeployPrometheus(vaultSecretName string, toke
 					},
 				},
 				ServiceMonitorSelector: &metav1.LabelSelector{},
-				PodMonitorSelector: &metav1.LabelSelector{},
-				ServiceAccountName: "starburst-enterprise-helm-operator-controller-manager",
+				PodMonitorSelector:     &metav1.LabelSelector{},
+				ServiceAccountName:     "starburst-enterprise-helm-operator-controller-manager",
 				Resources: corev1.ResourceRequirements{
 					Requests: corev1.ResourceList{
 						corev1.ResourceMemory: resource.MustParse("400Mi"),
