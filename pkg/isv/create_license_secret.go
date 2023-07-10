@@ -187,6 +187,10 @@ func (starburst *Starburst) GetAddonCRNamespace() string {
 	return "redhat-starburst-op"
 }
 
+func (starburst *Starburst) GetAddonID() string {
+	return "isv-starburst-operator"
+}
+
 func init() {
 	CommonISVInstance = &Starburst{}
 
