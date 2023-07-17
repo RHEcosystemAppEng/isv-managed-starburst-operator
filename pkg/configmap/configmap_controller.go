@@ -99,5 +99,5 @@ func configMapFilter() predicate.Predicate {
 }
 
 func isAddonConfigMap(object client.Object) bool {
-	return object.GetName() == isv.CommonISVInstance.GetAddonCRName() && object.GetNamespace() == isv.CommonISVInstance.GetAddonCRNamespace()
+	return object.GetName() == isv.CommonISVInstance.GetAddonID() && object.GetNamespace() == isv.CommonISVInstance.GetAddonCRNamespace()
 }

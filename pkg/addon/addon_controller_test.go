@@ -59,7 +59,7 @@ var _ = Describe("StarburstAddon Reconcile", Ordered, func() {
 
 		// Check finalizer
 		It("Should add finalizers", func() {
-			Expect(controllerutil.ContainsFinalizer(g, isv.CommonISVInstance.GetISVPrefix()+"addons/finalizer")).To(BeTrue())
+			Expect(controllerutil.ContainsFinalizer(g, isv.CommonISVInstance.GetAddonID())).To(BeTrue())
 		})
 	})
 
@@ -203,7 +203,7 @@ func prepareClusterForStarburstAddonDeletionTest() (*v1alpha1.StarburstAddon, *S
 	crNamespace := isv.CommonISVInstance.GetAddonCRNamespace()
 	starburstAddon.Namespace = crNamespace
 	starburstAddon.UID = types.UID("uid-uid")
-	starburstAddon.Finalizers = []string{isv.CommonISVInstance.GetISVPrefix() + "addons/finalizer"}
+	starburstAddon.Finalizers = []string{isv.CommonISVInstance.GetAddonID()}
 	now := metav1.NewTime(time.Now())
 	starburstAddon.ObjectMeta.DeletionTimestamp = &now
 

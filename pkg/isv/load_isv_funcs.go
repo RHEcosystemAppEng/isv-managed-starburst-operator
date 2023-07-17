@@ -37,4 +37,5 @@ type CommonISV interface {
 	GetISVPrefix() string
 	GetAddonCRName() string
 	GetAddonCRNamespace() string
+	GetAddonID() string
 }
