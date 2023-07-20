@@ -1,0 +1,25 @@
+apiVersion: charts.starburstdata.com/v1alpha1
+kind: StarburstEnterprise
+metadata:
+  name: starburstenterprise-sample
+  namespace: starburst-operator
+spec:
+  coordinator:
+    resources:
+      limits:
+        cpu: "1"
+      memory: 4Gi
+      requests:
+        cpu: "2"
+  image:
+    pullPolicy: IfNotPresent
+    repository: registry.connect.redhat.com/starburst/starburst-enterprise
+    tag: 380-e.3
+  worker:
+    replicas: "3"
+    resources:
+      limits:
+        cpu: "1"
+      memory: 4Gi
+      requests:
+        cpu: "1"

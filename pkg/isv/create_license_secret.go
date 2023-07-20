@@ -7,7 +7,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strconv"
+	"strings"
 )
 
 func applyStarburstLicense(ctx context.Context, cl client.Client, ns string) error {
@@ -64,14 +64,15 @@ func applyStarburstTileParameters(ctx context.Context, cl client.Client, ns stri
 		return err
 	}
 
+	starburstImageTag, err := getStarburstImageTag(subject)
+
+	if err != nil {
+		return err
+	}
+
 	cpu := addonParams.Data["cpu"]
 	if cpu != nil {
-		cpuInt, err := strconv.Atoi(string(cpu))
-		if err != nil {
-			return err
-		}
-
-		replaceCpuYamlVal(cpuInt, subject)
+		replaceCpuYamlVal(string(cpu), subject, starburstImageTag)
 	}
 
 	memory := addonParams.Data["memory"]
@@ -81,12 +82,7 @@ func applyStarburstTileParameters(ctx context.Context, cl client.Client, ns stri
 
 	replicas := addonParams.Data["replicas"]
 	if replicas != nil {
-		replicasInt, err := strconv.Atoi(string(replicas))
-		if err != nil {
-			return err
-		}
-
-		replaceReplicasYamlVal(replicasInt, subject)
+		replaceReplicasYamlVal(string(replicas), subject)
 	}
 
 	fmt.Println("updatedMap:", subject)
@@ -94,18 +90,41 @@ func applyStarburstTileParameters(ctx context.Context, cl client.Client, ns stri
 	return nil
 }
 
-func replaceCpuYamlVal(val int, yaml map[string]interface{}) {
+func getStarburstImageTag(yaml map[string]interface{}) (string, error) {
 	spec, ok := yaml["spec"]
 	if ok {
 		specMap, ok := spec.(map[string]interface{})
 		if ok {
-			replaceCpuInTag("coordinator", val, specMap)
-			replaceCpuInTag("worker", val, specMap)
+			imageObj, ok := specMap["image"]
+			if ok {
+				imageMap, ok := imageObj.(map[string]interface{})
+				if ok {
+					return imageMap["tag"].(string), nil
+				}
+			}
+		}
+	}
+
+	return "", fmt.Errorf("could not get Starburst image tag")
+}
+
+func replaceCpuYamlVal(val string, yaml map[string]interface{}, imageTag string) {
+	spec, ok := yaml["spec"]
+	if ok {
+		specMap, ok := spec.(map[string]interface{})
+		if ok {
+			if strings.HasPrefix(imageTag, "380") {
+				replaceCpuInTag380("coordinator", val, specMap)
+				replaceCpuInTag380("worker", val, specMap)
+			} else if strings.HasPrefix(imageTag, "402") {
+				replaceCpuInTag("coordinator", val, specMap)
+				replaceCpuInTag("worker", val, specMap)
+			}
 		}
 	}
 }
 
-func replaceReplicasYamlVal(val int, yaml map[string]interface{}) {
+func replaceReplicasYamlVal(val string, yaml map[string]interface{}) {
 	spec, ok := yaml["spec"]
 	if ok {
 		specMap, ok := spec.(map[string]interface{})
@@ -127,7 +146,7 @@ func replaceMemoryYamlVal(val string, yaml map[string]interface{}) {
 	}
 }
 
-func replaceReplicasInTag(tag string, replicasVal int, specMap map[string]interface{}) {
+func replaceReplicasInTag(tag string, replicasVal string, specMap map[string]interface{}) {
 	tagObj, ok := specMap[tag]
 	if ok {
 		tagMap, ok := tagObj.(map[string]interface{})
@@ -137,7 +156,7 @@ func replaceReplicasInTag(tag string, replicasVal int, specMap map[string]interf
 	}
 }
 
-func replaceCpuInTag(tag string, cpuVal int, specMap map[string]interface{}) {
+func replaceCpuInTag(tag string, cpuVal string, specMap map[string]interface{}) {
 	tagObj, ok := specMap[tag]
 	if ok {
 		tagMap, ok := tagObj.(map[string]interface{})
@@ -150,6 +169,42 @@ func replaceCpuInTag(tag string, cpuVal int, specMap map[string]interface{}) {
 				}
 			} else {
 				tagMap["resources"] = map[string]interface{}{"cpu": cpuVal}
+			}
+		}
+	}
+}
+
+func replaceCpuInTag380(tag string, cpuVal string, specMap map[string]interface{}) {
+	tagObj, ok := specMap[tag]
+	if ok {
+		tagMap, ok := tagObj.(map[string]interface{})
+		if ok {
+			resources, ok := tagMap["resources"]
+			if ok {
+				resourcesMap, ok := resources.(map[string]interface{})
+				if ok {
+					limits, ok := resourcesMap["limits"]
+					if ok {
+						limitsMap, ok := limits.(map[string]interface{})
+						if ok {
+							_, ok := limitsMap["cpu"]
+							if ok {
+								limitsMap["cpu"] = cpuVal
+							}
+						}
+					}
+
+					requests, ok := resourcesMap["requests"]
+					if ok {
+						requestsMap, ok := requests.(map[string]interface{})
+						if ok {
+							requestsMap["cpu"] = cpuVal
+						}
+					}
+				}
+			} else {
+				tagMap["resources"] = map[string]interface{}{"limits": map[string]interface{}{"cpu": cpuVal},
+					"requests": map[string]interface{}{"cpu": cpuVal}}
 			}
 		}
 	}

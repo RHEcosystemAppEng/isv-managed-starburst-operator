@@ -3,3 +3,18 @@ apiVersion: charts.starburstdata.com/v1alpha1
 metadata:
   name: starburstenterprise-sample
   namespace: starburst-operator
+spec:
+  image:
+    pullPolicy: IfNotPresent
+    repository: registry.connect.redhat.com/starburst/starburst-enterprise
+    tag: 402-e.1
+  coordinator:
+    replicas: "1"
+    resources:
+      cpu: "2"
+      memory: 4Gi
+  worker:
+    replicas: "3"
+    resources:
+      cpu: "1"
+      memory: 8Gi
