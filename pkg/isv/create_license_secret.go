@@ -80,7 +80,7 @@ func applyStarburstTileParameters(ctx context.Context, cl client.Client, ns stri
 		replaceMemoryYamlVal(string(memory), subject)
 	}
 
-	replicas := addonParams.Data["replicas"]
+	replicas := addonParams.Data["replica"]
 	if replicas != nil {
 		replaceReplicasYamlVal(string(replicas), subject)
 	}
