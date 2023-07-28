@@ -188,7 +188,7 @@ func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	}, prometheus); err != nil && k8serrors.IsNotFound(err) {
 		logger.Info("Prometheus not found. Creating...")
 		// tokenURL, remoteWriteURL, clusterID string
-		prometheus = r.DeployPrometheus(vault.Name, string(vault.Data["token-url"]), string(vault.Data["remote-write-url"]), string(vault.Data["regex"]), fetchClusterID(cv), prometheusName, addon.Namespace)
+		prometheus = r.DeployPrometheus(addon, vault.Name, string(vault.Data["token-url"]), string(vault.Data["remote-write-url"]), string(vault.Data["regex"]), fetchClusterID(cv), prometheusName, addon.Namespace)
 		if err := r.Client.Create(ctx, prometheus); err != nil {
 			logger.Error(err, "Could not create Prometheus")
 			return ctrl.Result{Requeue: true}, fmt.Errorf("could not create Prometheus: %v", err)
@@ -212,28 +212,12 @@ func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		Namespace: addon.Namespace,
 	}, serviceMonitor); err != nil && k8serrors.IsNotFound(err) {
 		logger.Info("Service Monitor not found. Creating...")
-		serviceMonitor = r.DeployEnterpriseServiceMonitor(serviceMonitorName, addon.Namespace, desiredEnterprise.GetLabels())
+		serviceMonitor = r.DeployEnterpriseServiceMonitor(addon, serviceMonitorName, addon.Namespace)
 		if err := r.Client.Create(ctx, serviceMonitor); err != nil {
 			logger.Error(err, "Could not create Service Monitor")
 			return ctrl.Result{Requeue: true}, fmt.Errorf("could not create service monitor: %v", err)
 		}
 	}
-
-	// fedServiceMonitorName := addon.Name + "-federation"
-
-	// // Deploy Federation ServiceMonitor
-	// fedServiceMonitor := &promv1.ServiceMonitor{}
-	// if err := r.Client.Get(ctx, types.NamespacedName{
-	// 	Name:      fedServiceMonitorName,
-	// 	Namespace: addon.Namespace,
-	// }, fedServiceMonitor); err != nil && k8serrors.IsNotFound(err) {
-	// 	logger.Info("Federation Service Monitor not found. Creating...")
-	// 	fedServiceMonitor = r.DeployFederationServiceMonitor(fedServiceMonitorName, addon.Namespace, string(vault.Data["metrics.yaml"]))
-	// 	if err := r.Client.Create(ctx, fedServiceMonitor); err != nil {
-	// 		logger.Error(err, "Could not create Federation Service Monitor")
-	// 		return ctrl.Result{Requeue: true}, fmt.Errorf("could not create federation service monitor: %v", err)
-	// 	}
-	// }
 
 	prometheusRuleName := addon.Name + "-rules"
 
@@ -244,7 +228,7 @@ func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		Namespace: addon.Namespace,
 	}, prometheusRule); err != nil && k8serrors.IsNotFound(err) {
 		logger.Info("Prometheus Rules not found. Creating...")
-		prometheusRule, err = r.DeployPrometheusRules(prometheusRuleName, addon.Namespace, vault.Data["rules.yaml"])
+		prometheusRule, err = r.DeployPrometheusRules(addon, prometheusRuleName, addon.Namespace, vault.Data["rules.yaml"])
 		if err != nil {
 			logger.Error(err, "could not create prometheus rules")
 			return ctrl.Result{Requeue: true}, err
@@ -315,6 +299,9 @@ func setDesiredEnterpriseCRBasicFields(desiredEnterprise unstructured.Unstructur
 func (r *StarburstAddonReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.StarburstAddon{}).
+		Owns(&promv1.Prometheus{}).
+		Owns(&promv1.PrometheusRule{}).
+		Owns(&promv1.ServiceMonitor{}).
 		Complete(r)
 }
 
@@ -347,8 +334,8 @@ func (r *StarburstAddonReconciler) buildEnterpriseResource(ctx context.Context, 
 
 }
 
-func (r *StarburstAddonReconciler) DeployEnterpriseServiceMonitor(serviceMonitorName string, serviceMonitorNamespace string, enterprise map[string]string) *promv1.ServiceMonitor {
-	return &promv1.ServiceMonitor{
+func (r *StarburstAddonReconciler) DeployEnterpriseServiceMonitor(addon *v1alpha1.StarburstAddon, serviceMonitorName string, serviceMonitorNamespace string) *promv1.ServiceMonitor {
+	sm := &promv1.ServiceMonitor{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      serviceMonitorName,
 			Namespace: serviceMonitorNamespace,
@@ -370,9 +357,15 @@ func (r *StarburstAddonReconciler) DeployEnterpriseServiceMonitor(serviceMonitor
 			},
 		},
 	}
+
+	sm.SetOwnerReferences([]metav1.OwnerReference{
+		*metav1.NewControllerRef(addon, addon.GetObjectKind().GroupVersionKind()),
+	})
+
+	return sm
 }
 
-func (r *StarburstAddonReconciler) DeployPrometheusRules(prometheusRuleName string, prometheusRuleNamespace string, rules []byte) (*promv1.PrometheusRule, error) {
+func (r *StarburstAddonReconciler) DeployPrometheusRules(addon *v1alpha1.StarburstAddon, prometheusRuleName string, prometheusRuleNamespace string, rules []byte) (*promv1.PrometheusRule, error) {
 	// deserialize the rules to Rule array
 	var rulesArray []promv1.Rule
 	var raw interface{}
@@ -406,6 +399,11 @@ func (r *StarburstAddonReconciler) DeployPrometheusRules(prometheusRuleName stri
 			},
 		},
 	}
+
+	promRules.SetOwnerReferences([]metav1.OwnerReference{
+		*metav1.NewControllerRef(addon, addon.GetObjectKind().GroupVersionKind()),
+	})
+
 	return promRules, nil
 }
 
@@ -420,56 +418,8 @@ func ConvertToIntOrStringFunc(f reflect.Type, t reflect.Type, data interface{}) 
 	return data, nil
 }
 
-// func (r *StarburstAddonReconciler) DeployFederationServiceMonitor(fedServiceMonitorName string, fedServiceMonitorNamespace string, metrics string) *promv1.ServiceMonitor {
-
-// 	metric := make(map[string][]string)
-// 	metric["match[]"] = append(metric["match[]"], metrics)
-
-// 	// create federated serviceMonitor
-// 	fedServiceMonitor := &promv1.ServiceMonitor{}
-// 	fedServiceMonitor.APIVersion = "monitoring.coreos.com/v1"
-// 	fedServiceMonitor.Kind = "ServiceMonitor"
-// 	fedServiceMonitor.Name = fedServiceMonitorName
-// 	fedServiceMonitor.Namespace = fedServiceMonitorNamespace
-// 	fedServiceMonitor.Spec = promv1.ServiceMonitorSpec{
-// 		JobLabel: "openshift-monitoring-federation",
-// 		NamespaceSelector: promv1.NamespaceSelector{
-// 			MatchNames: []string{
-// 				"openshift-monitoring",
-// 			},
-// 		},
-// 		Selector: metav1.LabelSelector{
-// 			MatchLabels: map[string]string{
-// 				"app.kubernetes.io/instance": "k8s",
-// 			},
-// 		},
-// 		Endpoints: []promv1.Endpoint{
-// 			{
-// 				BearerTokenFile: "/var/run/secrets/kubernetes.io/serviceaccount/token",
-// 				Port:            "web",
-// 				Path:            "/federate",
-// 				Interval:        "30s",
-// 				Scheme:          "https",
-// 				Params:          metric,
-// 				TLSConfig: &promv1.TLSConfig{
-// 					SafeTLSConfig: promv1.SafeTLSConfig{
-// 						InsecureSkipVerify: true,
-// 						ServerName:         "prometheus-k8s.openshift-monitoring.svc.cluster.local",
-// 					},
-// 					CAFile: "/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt",
-// 				},
-// 			},
-// 		},
-// 	}
-
-// 	return fedServiceMonitor
-// }
-
-func (r *StarburstAddonReconciler) DeployPrometheus(vaultSecretName string, tokenURL, remoteWriteURL, regex, clusterID, prometheusName, namespace string) *promv1.Prometheus {
-
-	//prometheusSelector := addon.Spec.ResourceSelector
-
-	return &promv1.Prometheus{
+func (r *StarburstAddonReconciler) DeployPrometheus(addon *v1alpha1.StarburstAddon, vaultSecretName string, tokenURL, remoteWriteURL, regex, clusterID, prometheusName, namespace string) *promv1.Prometheus {
+	prometheus := &promv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      prometheusName,
 			Namespace: namespace,
@@ -541,6 +491,12 @@ func (r *StarburstAddonReconciler) DeployPrometheus(vaultSecretName string, toke
 			},
 		},
 	}
+
+	prometheus.SetOwnerReferences([]metav1.OwnerReference{
+		*metav1.NewControllerRef(addon, addon.GetObjectKind().GroupVersionKind()),
+	})
+
+	return prometheus
 }
 
 // build the desired enterprise name
