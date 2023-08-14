@@ -31,7 +31,7 @@ import (
 
 var _ = Describe("StarburstAddon Reconcile", Ordered, func() {
 	Context("Creation Reconcile", func() {
-		starburstAddon, r := prepareClusterForStarburstAddonCreateTest()
+		starburstAddon, r := prepareClusterForStarburstAddonCreateTest("402")
 		crName := isv.CommonISVInstance.GetAddonCRName()
 		crNamespace := isv.CommonISVInstance.GetAddonCRNamespace()
 		var g = &v1alpha1.StarburstAddon{}
@@ -46,25 +46,37 @@ var _ = Describe("StarburstAddon Reconcile", Ordered, func() {
 
 			_, err := r.Reconcile(context.TODO(), req)
 			Expect(err).ShouldNot(HaveOccurred())
-
 		})
 		It("Get the StarburstAddon CR from API - No Error", func() {
 			err := r.Client.Get(context.TODO(), types.NamespacedName{
 				Namespace: starburstAddon.Namespace,
 				Name:      starburstAddon.Name,
 			}, g)
-			Expect(err).ShouldNot(HaveOccurred())
 
+			Expect(err).ShouldNot(HaveOccurred())
 		})
 
 		// Check finalizer
 		It("Should add finalizers", func() {
 			Expect(controllerutil.ContainsFinalizer(g, isv.CommonISVInstance.GetAddonID())).To(BeTrue())
 		})
+
+		It("Second reconcile should not error", func() {
+			req := reconcile.Request{
+				NamespacedName: types.NamespacedName{
+					Namespace: crNamespace,
+					Name:      crName,
+				},
+			}
+
+			_, err := r.Reconcile(context.TODO(), req)
+
+			Expect(err).ShouldNot(HaveOccurred())
+		})
 	})
 
 	Context("Delete reconcile", func() {
-		starburstAddon, r := prepareClusterForStarburstAddonDeletionTest()
+		starburstAddon, r := prepareClusterForStarburstAddonDeletionTest("402")
 
 		req := reconcile.Request{
 			NamespacedName: types.NamespacedName{
@@ -86,12 +98,14 @@ var _ = Describe("StarburstAddon Reconcile", Ordered, func() {
 				Name:      buildEnterpriseName(req.Name),
 				Namespace: isv.CommonISVInstance.GetAddonCRNamespace(),
 			}, enterprise)
+
 			Expect(err).Should(HaveOccurred())
 			Expect(k8serrors.IsNotFound(err)).To(BeTrue())
 		})
 
 		It("should already find the StarburstAddon CR deleted", func() {
 			err := r.Client.Delete(context.TODO(), starburstAddon)
+
 			Expect(err).Should(HaveOccurred())
 			Expect(k8serrors.IsNotFound(err)).To(BeTrue())
 		})
@@ -99,13 +113,158 @@ var _ = Describe("StarburstAddon Reconcile", Ordered, func() {
 		Context("a second time", func() {
 			It("should not return an error", func() {
 				_, err := r.Reconcile(context.TODO(), req)
+
 				Expect(err).ShouldNot(HaveOccurred())
 			})
 		})
 	})
+
+	Context("Creation Reconcile version 380", func() {
+		starburstAddon, r := prepareClusterForStarburstAddonCreateTest("380")
+		crName := isv.CommonISVInstance.GetAddonCRName()
+		crNamespace := isv.CommonISVInstance.GetAddonCRNamespace()
+		var g = &v1alpha1.StarburstAddon{}
+
+		It("First reconcile should not error", func() {
+			req := reconcile.Request{
+				NamespacedName: types.NamespacedName{
+					Namespace: crNamespace,
+					Name:      crName,
+				},
+			}
+
+			_, err := r.Reconcile(context.TODO(), req)
+
+			Expect(err).ShouldNot(HaveOccurred())
+		})
+		It("Get the StarburstAddon CR from API - No Error", func() {
+			err := r.Client.Get(context.TODO(), types.NamespacedName{
+				Namespace: starburstAddon.Namespace,
+				Name:      starburstAddon.Name,
+			}, g)
+
+			Expect(err).ShouldNot(HaveOccurred())
+		})
+
+		// Check finalizer
+		It("Should add finalizers", func() {
+			Expect(controllerutil.ContainsFinalizer(g, isv.CommonISVInstance.GetAddonID())).To(BeTrue())
+		})
+
+		It("Second reconcile should not error", func() {
+			req := reconcile.Request{
+				NamespacedName: types.NamespacedName{
+					Namespace: crNamespace,
+					Name:      crName,
+				},
+			}
+
+			_, err := r.Reconcile(context.TODO(), req)
+
+			Expect(err).ShouldNot(HaveOccurred())
+		})
+	})
+
+	Context("Test creation with missing objects", func() {
+		crName := isv.CommonISVInstance.GetAddonCRName()
+		crNamespace := isv.CommonISVInstance.GetAddonCRNamespace()
+
+		It("Reconcile with no secrets - should error", func() {
+			_, r := prepareClusterForStarburstAddonCreateNoSecrets()
+
+			req := reconcile.Request{
+				NamespacedName: types.NamespacedName{
+					Namespace: crNamespace,
+					Name:      crName,
+				},
+			}
+
+			_, err := r.Reconcile(context.TODO(), req)
+
+			Expect(err).Should(HaveOccurred())
+
+			Expect(k8serrors.IsNotFound(err)).To(BeTrue())
+		})
+
+		It("Reconcile with secret missing enterprise CR - should error", func() {
+			_, r := prepareClusterForStarburstAddonCreateWithMissingCR("380")
+
+			req := reconcile.Request{
+				NamespacedName: types.NamespacedName{
+					Namespace: crNamespace,
+					Name:      crName,
+				},
+			}
+
+			_, err := r.Reconcile(context.TODO(), req)
+
+			Expect(err).Should(HaveOccurred())
+		})
+
+		It("Get the StarburstAddon CR from API - Not found", func() {
+			r := prepareClusterForStarburstAddonCreateNoCR()
+
+			var g = &v1alpha1.StarburstAddon{}
+
+			err := r.Client.Get(context.TODO(), types.NamespacedName{
+				Namespace: crNamespace,
+				Name:      crName,
+			}, g)
+
+			Expect(err).Should(HaveOccurred())
+
+			Expect(k8serrors.IsNotFound(err)).To(BeTrue())
+		})
+
+		It("Reconcile with no prometheus objects - should not error", func() {
+			starburstAddon, r := prepareClusterForStarburstAddonDeletionTest("380")
+
+			req := reconcile.Request{
+				NamespacedName: types.NamespacedName{
+					Namespace: starburstAddon.Namespace,
+					Name:      starburstAddon.Name,
+				},
+			}
+
+			_, err := r.Reconcile(context.TODO(), req)
+
+			_, r = prepareClusterForStarburstAddonCreateNoPrometheusObjs("380")
+
+			_, err = r.Reconcile(context.TODO(), req)
+
+			Expect(err).ShouldNot(HaveOccurred())
+
+			prometheus := &promv1.Prometheus{}
+			err = r.Client.Get(context.TODO(), types.NamespacedName{
+				Name:      req.Name + "-prometheus",
+				Namespace: isv.CommonISVInstance.GetAddonCRNamespace(),
+			}, prometheus)
+
+			Expect(err).ShouldNot(HaveOccurred())
+
+			_, err = r.Reconcile(context.TODO(), req)
+
+			Expect(err).ShouldNot(HaveOccurred())
+			serviceMonitor := &promv1.ServiceMonitor{}
+			err = r.Client.Get(context.TODO(), types.NamespacedName{
+				Name:      req.Name + "-servicemonitor",
+				Namespace: isv.CommonISVInstance.GetAddonCRNamespace(),
+			}, serviceMonitor)
+
+			Expect(err).ShouldNot(HaveOccurred())
+
+			prometheusRule := &promv1.PrometheusRule{}
+			err = r.Client.Get(context.TODO(), types.NamespacedName{
+				Name:      req.Name + "-rules",
+				Namespace: isv.CommonISVInstance.GetAddonCRNamespace(),
+			}, prometheusRule)
+
+			Expect(err).ShouldNot(HaveOccurred())
+		})
+	})
 })
 
-func prepareClusterForStarburstAddonCreateTest() (*v1alpha1.StarburstAddon, *StarburstAddonReconciler) {
+func prepareClusterForStarburstAddonCreateTest(starburstVersion string) (*v1alpha1.StarburstAddon, *StarburstAddonReconciler) {
 	starburstAddon := &v1alpha1.StarburstAddon{}
 	crName := isv.CommonISVInstance.GetAddonCRName()
 	starburstAddon.Name = crName
@@ -115,11 +274,70 @@ func prepareClusterForStarburstAddonCreateTest() (*v1alpha1.StarburstAddon, *Sta
 	starburstAddon.UID = types.UID("uid-uid")
 	starburstAddon.Kind = "StarburstAddon"
 
-	addonParamsSecret, vaultSecret := createSecretObjs(crNamespace)
+	addonParamsSecret, vaultSecret := createSecretObjs(crNamespace, starburstVersion, "")
 
 	p, sm, fm, promRules, enterprise := createAdditionalObjs(crName, crNamespace)
 
 	r := newTestStarburstAddonReconciler(starburstAddon, addonParamsSecret, vaultSecret, p, sm, fm, promRules, &enterprise)
+
+	return starburstAddon, r
+}
+
+func prepareClusterForStarburstAddonCreateWithMissingCR(starburstVersion string) (*v1alpha1.StarburstAddon, *StarburstAddonReconciler) {
+	starburstAddon := &v1alpha1.StarburstAddon{}
+	crName := isv.CommonISVInstance.GetAddonCRName()
+	starburstAddon.Name = crName
+	crNamespace := isv.CommonISVInstance.GetAddonCRNamespace()
+	starburstAddon.Namespace = crNamespace
+	starburstAddon.APIVersion = "v1alpha1"
+	starburstAddon.UID = types.UID("uid-uid")
+	starburstAddon.Kind = "StarburstAddon"
+
+	addonParamsSecret, vaultSecret := createSecretObjs(crNamespace, starburstVersion, "starburstenterprise.yaml")
+
+	p, sm, fm, promRules, enterprise := createAdditionalObjs(crName, crNamespace)
+
+	r := newTestStarburstAddonReconciler(starburstAddon, addonParamsSecret, vaultSecret, p, sm, fm, promRules, &enterprise)
+
+	return starburstAddon, r
+}
+
+func prepareClusterForStarburstAddonCreateNoSecrets() (*v1alpha1.StarburstAddon, *StarburstAddonReconciler) {
+	starburstAddon := &v1alpha1.StarburstAddon{}
+	crName := isv.CommonISVInstance.GetAddonCRName()
+	starburstAddon.Name = crName
+	crNamespace := isv.CommonISVInstance.GetAddonCRNamespace()
+	starburstAddon.Namespace = crNamespace
+	starburstAddon.APIVersion = "v1alpha1"
+	starburstAddon.UID = types.UID("uid-uid")
+	starburstAddon.Kind = "StarburstAddon"
+
+	r := newTestStarburstAddonReconciler(starburstAddon)
+
+	return starburstAddon, r
+}
+
+func prepareClusterForStarburstAddonCreateNoCR() *StarburstAddonReconciler {
+	r := newTestStarburstAddonReconciler()
+
+	return r
+}
+
+func prepareClusterForStarburstAddonCreateNoPrometheusObjs(starburstVersion string) (*v1alpha1.StarburstAddon, *StarburstAddonReconciler) {
+	starburstAddon := &v1alpha1.StarburstAddon{}
+	crName := isv.CommonISVInstance.GetAddonCRName()
+	starburstAddon.Name = crName
+	crNamespace := isv.CommonISVInstance.GetAddonCRNamespace()
+	starburstAddon.Namespace = crNamespace
+	starburstAddon.APIVersion = "v1alpha1"
+	starburstAddon.UID = types.UID("uid-uid")
+	starburstAddon.Kind = "StarburstAddon"
+
+	addonParamsSecret, vaultSecret := createSecretObjs(crNamespace, starburstVersion, "")
+
+	enterprise := createAdditionalObjsNoPrometheusObjs(crName, crNamespace)
+
+	r := newTestStarburstAddonReconciler(starburstAddon, addonParamsSecret, vaultSecret, &enterprise)
 
 	return starburstAddon, r
 }
@@ -154,6 +372,12 @@ func createAdditionalObjs(crName string, crNamespace string) (*promv1.Prometheus
 	return p, sm, fm, promRules, enterprise
 }
 
+func createAdditionalObjsNoPrometheusObjs(crName string, crNamespace string) unstructured.Unstructured {
+	enterprise := createBasicUnstructureEnterpriseObj(crName, crNamespace)
+
+	return enterprise
+}
+
 func createBasicUnstructureEnterpriseObj(crName string, crNamespace string) unstructured.Unstructured {
 	enterprise := unstructured.Unstructured{}
 	enterprise.SetName(buildEnterpriseName(crName))
@@ -162,7 +386,7 @@ func createBasicUnstructureEnterpriseObj(crName string, crNamespace string) unst
 	return enterprise
 }
 
-func createSecretObjs(crNamespace string) (*v1.Secret, *v1.Secret) {
+func createSecretObjs(crNamespace string, starburstVersion string, removeVaultPropertyName string) (*v1.Secret, *v1.Secret) {
 	addonParamsSecret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "addon-isv-starburst-operator-parameters",
@@ -170,13 +394,35 @@ func createSecretObjs(crNamespace string) (*v1.Secret, *v1.Secret) {
 		},
 		Data: map[string][]byte{
 			"starburst-license": []byte("dummyLicense"),
+			"cpu":               []byte("5"),
+			"replicas":          []byte("10"),
+			"memory":            []byte("64Gi"),
 		},
 	}
 
-	//Hack because fake client has issues with unstructured data (so we make sure that the enterprise CR wont be created/updated
-	f, err := os.ReadFile("../../test-resources/enterprise.yaml") // just pass the file name
+	var f []byte
+	var err error
+	//Hack because fake client used in the tests has issues with unstructured data ints (so we use a CR which doesn't contain ints)
+	if starburstVersion == "402" {
+		f, err = os.ReadFile("../../test-resources/enterprise.yaml")
+	} else if starburstVersion == "380" {
+		f, err = os.ReadFile("../../test-resources/enterprise-380.yaml")
+	}
 	if err != nil {
 		fmt.Print(err)
+	}
+
+	secretMap := map[string][]byte{
+		"starburstenterprise.yaml": f,
+		"token-url":                []byte("dummyTokenURL"),
+		"remote-write-url":         []byte("dummyRemoteWriteURL"),
+		"regex":                    []byte("dummyRegex"),
+		"metrics":                  []byte("dummyMetrics"),
+		"rules":                    []byte("dummyRules"),
+	}
+
+	if removeVaultPropertyName != "" {
+		delete(secretMap, removeVaultPropertyName)
 	}
 
 	vaultSecret := &v1.Secret{
@@ -184,19 +430,12 @@ func createSecretObjs(crNamespace string) (*v1.Secret, *v1.Secret) {
 			Name:      "addon",
 			Namespace: crNamespace,
 		},
-		Data: map[string][]byte{
-			"starburstenterprise.yaml": f,
-			"token-url":                []byte("dummyTokenURL"),
-			"remote-write-url":         []byte("dummyRemoteWriteURL"),
-			"regex":                    []byte("dummyRegex"),
-			"metrics":                  []byte("dummyMetrics"),
-			"rules":                    []byte("dummyRules"),
-		},
+		Data: secretMap,
 	}
 	return addonParamsSecret, vaultSecret
 }
 
-func prepareClusterForStarburstAddonDeletionTest() (*v1alpha1.StarburstAddon, *StarburstAddonReconciler) {
+func prepareClusterForStarburstAddonDeletionTest(starburstVersion string) (*v1alpha1.StarburstAddon, *StarburstAddonReconciler) {
 	starburstAddon := &v1alpha1.StarburstAddon{}
 	crName := isv.CommonISVInstance.GetAddonCRName()
 	starburstAddon.Name = crName
@@ -207,7 +446,7 @@ func prepareClusterForStarburstAddonDeletionTest() (*v1alpha1.StarburstAddon, *S
 	now := metav1.NewTime(time.Now())
 	starburstAddon.ObjectMeta.DeletionTimestamp = &now
 
-	addonParamsSecret, vaultSecret := createSecretObjs(crNamespace)
+	addonParamsSecret, vaultSecret := createSecretObjs(crNamespace, starburstVersion, "")
 
 	p, sm, fm, promRules, enterprise := createAdditionalObjs(crName, crNamespace)
 
